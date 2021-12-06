@@ -3,7 +3,9 @@ const path = require('path')
 const app = express()
 const cors = require('cors')
 const mongoose = require('mongoose')
-const authRouter = require('./routes/auth.js')
+const authMiddleware = require('./middlewares/authMiddleware')
+const authRouter = require('./routes/auth')
+const roomRouter = require('./routes/room')
 const cookieParser = require('cookie-parser')
 require('dotenv').config()
 
@@ -23,7 +25,7 @@ const db = mongoose.connection
 db.on('error', console.error.bind(console, 'error:'))
 db.once('open', () => {})
 
-app.use(express());
+app.use(express())
 app.use(express.static(path.join(__dirname + '/client/build')))
 const port = process.env.PORT || 8080
 
@@ -41,6 +43,7 @@ app.use(express.json())
 app.use(cookieParser())
 
 app.use('/api/auth', authRouter)
+app.use('/api/room',authMiddleware, roomRouter)
 
 app.get('*', (request, response) => {
     response.sendFile(path.join(__dirname + '/client/build/index.html'))
