@@ -14,20 +14,22 @@ router.post("/register", async (req, res) => {
       username: username,
     })
 
-    user &&
-      res.status(400).json({
+    if (user) {
+      return res.status(400).json({
         msg: "Username already exists",
       })
+    }      
 
     user = await User.findOne({
       email: email,
     })
 
     if (user) {
-      user.active &&
-        res.status(400).json({
+      if(user.active) {
+        return res.status(400).json({
           msg: "User already exists",
         })
+      }
 
       let code = Math.floor(1000 + Math.random() * 9999)
 
@@ -71,11 +73,7 @@ router.post("/register", async (req, res) => {
       const salt = await bcrypt.genSalt(10)
       const hashedPassword = await bcrypt.hash(newUser.password, salt)
       newUser.password = hashedPassword
-      try {
-        newUser.save()
-      } catch (error) {
-        console.log(error.message)
-      }
+      newUser.save()
     }
     res.status(200).json({
       msg: "User created",
@@ -140,8 +138,11 @@ router.post("/login", async (req, res) => {
 
     const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: "30d" })
 
+    res.cookie("userId", user._id)
+
     res.status(200).json({
       token: token,
+      user: user,
     })
 
   } catch (err) {
