@@ -4,6 +4,8 @@ const mailService = require("../services/mailService")
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcrypt")
 
+
+
 router.post("/register", async (req, res) => {
   try {
     const { email, username, password, fullname } = req.body
