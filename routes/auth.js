@@ -18,14 +18,14 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({
         msg: "Username already exists",
       })
-    }      
+    }
 
     user = await User.findOne({
       email: email,
     })
 
     if (user) {
-      if(user.active) {
+      if (user.active) {
         return res.status(400).json({
           msg: "User already exists",
         })
@@ -94,16 +94,21 @@ router.post("/verify", async (req, res) => {
     })
 
     if (user) {
-      user.active && res.status(400).json({ msg: "Email has been verified" })
-      user.code !== code &&
-        res.status(400).json({ msg: "Code is not correct" })
-      user.active = true
-      user.save()
-      res.status(200).json({
-        msg: "Email verified",
-      })
+      if (user.active) {
+        return res.status(400).json({
+          msg: "Email has been verified",
+        })
+      } else if (user.code !== code)
+        return res.status(400).json({ msg: "Code is not correct" })
+      else {
+        user.active = true
+        user.save()
+        return res.status(200).json({
+          msg: "Email verified",
+        })
+      }
     } else {
-      res.status(404).json({
+      return res.status(404).json({
         msg: "Email not found",
       })
     }
@@ -119,10 +124,11 @@ router.post("/login", async (req, res) => {
   try {
     const user = await User.findOne({
       email: req.body.email,
+      active: true,
     })
 
-    !user &&
-      res.status(404).json({
+    if (!user)
+      return res.status(404).json({
         msg: "user not found",
       })
 
@@ -131,8 +137,8 @@ router.post("/login", async (req, res) => {
       user.password
     )
 
-    !validPassword &&
-      res.status(400).json({
+    if (!validPassword)
+      return res.status(400).json({
         msg: "wrong password",
       })
 
@@ -140,13 +146,12 @@ router.post("/login", async (req, res) => {
 
     res.cookie("userId", user._id)
 
-    res.status(200).json({
+    return res.status(200).json({
       token: token,
       user: user,
     })
 
   } catch (err) {
-    console.error(err.message)
     res.status(500).json({
       msg: "Server error",
     })
