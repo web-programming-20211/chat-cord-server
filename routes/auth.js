@@ -16,7 +16,7 @@ router.post("/register", async (req, res) => {
 
     if (user) {
       return res.status(400).json({
-        msg: "Username already exists",
+        msg: "That username is taken. Try another.",
       })
     }
 
@@ -27,7 +27,7 @@ router.post("/register", async (req, res) => {
     if (user) {
       if (user.active) {
         return res.status(400).json({
-          msg: "User already exists",
+          msg: "User with that email already exists",
         })
       }
 
@@ -37,7 +37,7 @@ router.post("/register", async (req, res) => {
         from: process.env.MAIL_USER,
         to: req.body.email,
         subject: "CHAT WEB NOTIFICATION",
-        text: "Your code is: " + code,
+        text: "Your verify code is: " + code,
       }
 
       mailService.sendMail(mailOptions)
@@ -58,7 +58,7 @@ router.post("/register", async (req, res) => {
         from: process.env.MAIL_USER,
         to: req.body.email,
         subject: "CHAT WEB NOTIFICATION",
-        text: "Your code is: " + code,
+        text: "Your verify code is: " + code,
       }
 
       mailService.sendMail(mailOptions)
@@ -78,7 +78,7 @@ router.post("/register", async (req, res) => {
       newUser.save()
     }
     res.status(200).json({
-      msg: "User created",
+      msg: "Your account has been successfully created! We'll send a verify code to the email address you used to create the account.",
     })
   } catch (err) {
     console.error(err.message)
@@ -98,15 +98,15 @@ router.post("/verify", async (req, res) => {
     if (user) {
       if (user.active) {
         return res.status(400).json({
-          msg: "Email has been verified",
+          msg: "User with that email is already active!",
         })
       } else if (user.code !== code)
-        return res.status(400).json({ msg: "Code is not correct" })
+        return res.status(400).json({ msg: "Verify code is incorrect" })
       else {
         user.active = true
         user.save()
         return res.status(200).json({
-          msg: "Email verified",
+          msg: "Email successfully verified",
         })
       }
     } else {
