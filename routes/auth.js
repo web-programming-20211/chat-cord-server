@@ -34,7 +34,7 @@ router.post("/register", async (req, res) => {
       let code = Math.floor(1000 + Math.random() * 9999)
 
       let mailOptions = {
-        from: "son.pd184189@gmail.com",
+        from: process.env.MAIL_USER,
         to: req.body.email,
         subject: "CHAT WEB NOTIFICATION",
         text: "Your code is: " + code,
@@ -54,7 +54,7 @@ router.post("/register", async (req, res) => {
       let code = Math.floor(1000 + Math.random() * 9999)
 
       let mailOptions = {
-        from: "son.pd184189@gmail.com",
+        from: process.env.MAIL_USER,
         to: req.body.email,
         subject: "CHAT WEB NOTIFICATION",
         text: "Your code is: " + code,
@@ -156,6 +156,28 @@ router.post("/login", async (req, res) => {
       msg: "Server error",
     })
   }
+})
+
+router.post("/testMail", async (req, res) => {
+
+  let mailOptions = {
+    from: process.env.MAIL_USER,
+    to: "dung1@yopmail.com",
+    subject: "CHAT WEB NOTIFICATION",
+    text: "Test send mail",
+  }
+
+  try {
+    mailService.sendMail(mailOptions)
+    console.log(mailOptions.to)
+    res.status(200).json({ msg: "OK" })
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: error });
+    // expected output: ReferenceError: nonExistentFunction is not defined
+    // Note - error messages will vary depending on browser
+  }
+  
 })
 
 module.exports = router
