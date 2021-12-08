@@ -18,7 +18,7 @@ router.get('/retrieve', (req, res) => {
         const subPromise = new Promise((resolve, reject) => {
           Room.findOne({ _id: room.roomId }).then((result) => resolve(result))
         })
-        promises.push(subPromise.then)
+        promises.push(subPromise)
       })
       Promise.all(promises).then((result) => {
         res.status(200).json({ msg: result })
@@ -36,8 +36,8 @@ router.post('/create', (req, res) => {
 
   const newRoom = new Room({
     shortId: shortid.generate(),
-    name: name.trim(),
-    description: description.trim(),
+    name: name,
+    description: description,
     creator: userId,
     isPrivate: isPrivate,
     color: Math.floor(Math.random() * 16777215).toString(16),
@@ -47,8 +47,8 @@ router.post('/create', (req, res) => {
     .save()
     .then((result) => {
       const newAttend = new Attend({
-        roomId: mongoose.Types.ObjectId(result._id),
-        userId: mongoose.Types.ObjectId(userId),
+        roomId: result._id,
+        userId: userId,
       })
       newAttend.save().then((result) => {
         res.status(200).json({ msg: newRoom })
