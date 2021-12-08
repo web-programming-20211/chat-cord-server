@@ -1,16 +1,30 @@
 var nodemailer = require("nodemailer");
 
 var transporter = nodemailer.createTransport({
-  service: "gmail",
+  service: "yandex",
+  secure: true,
   auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
+    user: "phngdung@yandex.com",
+    pass: "abcD123$",
   },
 });
 
 function sendMail(mailOptions) {
-  transporter.sendMail(mailOptions, function (error, info) {
-    if (error) return error;
+  transporter.verify(function (error, success) {
+    if (error) {
+      console.log(error);
+    } else {
+      transporter.sendMail(mailOptions, function (error, info) {
+        if (error) { 
+          console.log(error);
+          return error;
+        }
+        else {
+            console.log('Email sent: ' + info.response);
+          }
+      });
+      console.log("MAIL SERVER: Server is ready to take our messages");
+    }
   });
 }
 
