@@ -49,6 +49,7 @@ router.post("/register", async (req, res) => {
       user.password = hashedPassword
       user.username = username
       user.code = code
+      user.color = Math.floor(Math.random() * 16777215).toString(16)
       user.save()
     } else {
       let code = Math.floor(1000 + Math.random() * 9999)
@@ -68,6 +69,7 @@ router.post("/register", async (req, res) => {
         email: email,
         password: password,
         code: code,
+        color: Math.floor(Math.random() * 16777215).toString(16),
       })
 
       const salt = await bcrypt.genSalt(10)
