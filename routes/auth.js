@@ -171,7 +171,6 @@ router.post("/testMail", async (req, res) => {
 
   try {
     mailService.sendMail(mailOptions)
-    console.log(mailOptions.to)
     res.status(200).json({ msg: "OK" })
   } catch (error) {
     console.error(error);
