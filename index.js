@@ -14,6 +14,8 @@ const roomRouter = require('./routes/room')
 const messageRouter = require('./routes/message')
 const reactionRouter = require('./routes/reaction')
 const cookieParser = require('cookie-parser')
+const multer = require('multer')
+const firebaseService = require('./services/firebaseService')
 require('dotenv').config()
 
 
@@ -61,7 +63,20 @@ app.use('/room', roomRouter)
 app.use('/message', messageRouter)
 app.use('/reaction', reactionRouter)
 
+const upload = multer({
+    storage: multer.memoryStorage()
+})
+app.post('/testUpload', upload.single('file'), (req, res) => {
 
+    try {
+        firebaseService.uploadFile(req.file)
+    } catch (error) {
+        console.log(error)
+        return  res.status(404).send(error)
+    }
+    res.status(200).send("File uploaded.")
+        
+})
 
 // app.get('*', (request, response) => {
 //     response.sendFile(path.join(__dirname + '/client/build/index.html'))
