@@ -29,6 +29,19 @@ router.get('/retrieve', (req, res) => {
     })
 })
 
+// get room by id 
+router.get('/:id', (req, res) => {
+  const id = req.params.id
+  Room.findOne({ _id: id })
+    .then((room) => {
+      res.status(200).json({ msg: room })
+    })
+    .catch((err) => {
+      res.status(404).json({ msg: 'Room not found' })
+    })
+})
+
+
 //create a room
 router.post('/create', (req, res) => {
   const userId = req.cookies.userId
@@ -71,7 +84,7 @@ router.post('/:id/attend', (req, res) => {
             roomId: room._id,
           })
           newAttend.save().then((result) => {
-            res.status(200).json({ msg: 'success' })
+            res.status(200).json({ msg: room })
           })
         }
       )
