@@ -16,6 +16,7 @@ const reactionRouter = require('./routes/reaction')
 const cookieParser = require('cookie-parser')
 const multer = require('multer')
 const firebaseService = require('./services/firebaseService')
+const Room = require('./models/Room')
 require('dotenv').config()
 
 
@@ -29,6 +30,7 @@ require('dotenv').config()
 // } catch (e) {
 //     console.log('failed')
 // }
+
 try {
     mongoose.connect(
         process.env.MONGO_URL, {
@@ -130,8 +132,15 @@ io.on('connection', (socket) => {
                         }
                     }
                     const message_model = new Message(message_instance)
-                    message_model.save((err, result) => {
-                        io.in(currentRoom).emit('your_new_message', result)
+                    message_model.save().then(result => {
+                        Room.findOne({ _id: currentRoom }).then(room => {
+                            if (room) {
+                                room.lastMessage = message
+                                room.lastMessageDate = result.createdAt
+                                room.save()
+                            }
+                        })
+                        io.in(currentRoom).emit('your_new_message', result, currentRoom)
                     })
                 })
             }
