@@ -4,7 +4,7 @@ const messageSchema = new mongoose.Schema({
     content: String,
     in: mongoose.Schema.Types.ObjectId,
     from: {
-        username: String,
+        fullname: String,
         userId: mongoose.Schema.Types.ObjectId,
         color: String
     }

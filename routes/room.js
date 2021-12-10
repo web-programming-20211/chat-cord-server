@@ -78,19 +78,20 @@ router.post('/:id/attend', (req, res) => {
     .then((room) => {
       Attend.findOne({ roomId: room._id, userId: req.cookies.userId }).then(
         (attend) => {
-          attend && res.status(400).json({ msg: 'already attended' })
+          if (attend)
+            return res.status(400).json({ msg: room })
           const newAttend = new Attend({
             userId: req.cookies.userId,
             roomId: room._id,
           })
           newAttend.save().then((result) => {
-            res.status(200).json({ msg: room })
+            return res.status(200).json({ msg: room })
           })
         }
       )
     })
     .catch(() => {
-      res.status(404).json({ msg: 'room not found' })
+      return res.status(404).json({ msg: 'room not found' })
     })
 })
 
@@ -106,7 +107,7 @@ router.post('/:id/leave', (req, res) => {
 
 })
 
-// get memvers of a room
+// get members of a room
 router.get('/:id/members', (req, res) => {
   const roomId = req.params.id
   Attend.find({ roomId: roomId }).then((rooms) => {

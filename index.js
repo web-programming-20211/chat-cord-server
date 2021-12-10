@@ -21,7 +21,7 @@ require('dotenv').config()
 
 try {
     mongoose.connect(
-        process.env.MONGO_URL, {
+        "mongodb://127.0.0.1:27017/chat", {
         useNewUrlParser: true,
         useUnifiedTopology: true
     },
@@ -29,6 +29,16 @@ try {
 } catch (e) {
     console.log('failed')
 }
+// try {
+//     mongoose.connect(
+//         process.env.MONGO_URL, {
+//         useNewUrlParser: true,
+//         useUnifiedTopology: true
+//     },
+//     )
+// } catch (e) {
+//     console.log('failed')
+// }
 
 const db = mongoose.connection
 db.on('error', console.error.bind(console, 'error:'))
@@ -91,13 +101,13 @@ const io = socket(server)
 io.on('connection', (socket) => {
     socket.emit('connected')
     socket.on('joinRoom', (currentRoom) => {
-        if (currentRoom._id !== -1) {
-            socket.join(currentRoom._id)
+        if (currentRoom?._id !== -1) {
+            socket.join(currentRoom?._id)
         }
     })
 
     socket.on('leaveRoom', (currentRoom) => {
-        socket.leave(currentRoom._id)
+        socket.leave(currentRoom?._id)
     })
 
     //message sending event has been fired from a socket
@@ -115,7 +125,7 @@ io.on('connection', (socket) => {
                         in: mongoose.Types.ObjectId(currentRoom),
                         from: {
                             userId: result._id,
-                            username: result.username,
+                            fullname: result.fullname,
                             color: result.color
                         }
                     }
