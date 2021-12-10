@@ -29,6 +29,12 @@ const RoomSchema = new mongoose.Schema({
         required: true,
         default: '#000000'
     },
+    lastMessage: {
+        type: String,
+    },
+    lastMessageDate: {
+        type: Date,
+    },
 })
 
 module.exports = mongoose.model('Room', RoomSchema, 'room')
