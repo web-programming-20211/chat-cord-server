@@ -8,6 +8,8 @@ const messageSchema = new mongoose.Schema({
         userId: mongoose.Schema.Types.ObjectId,
         color: String
     }
+}, {
+    timestamps: true,
 })
 
 const Message = mongoose.model('Message', messageSchema, 'message')
