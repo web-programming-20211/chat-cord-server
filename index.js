@@ -79,21 +79,6 @@ app.use('/reaction', reactionRouter)
 const upload = multer({
     storage: multer.memoryStorage()
 })
-app.post('/testUpload', upload.single('file'), (req, res) => {
-
-    try {
-        firebaseService.uploadFile(req.file)
-    } catch (error) {
-        console.log(error)
-        return  res.status(404).send(error)
-    }
-    res.status(200).send("File uploaded.")
-        
-})
-
-// app.get('*', (request, response) => {
-//     response.sendFile(path.join(__dirname + '/client/build/index.html'))
-// })
 
 const server = app.listen(port, () => console.log(`Running on port ${port}`))
 
@@ -113,7 +98,7 @@ io.on('connection', (socket) => {
     })
 
     //message sending event has been fired from a socket
-    socket.on('chat', (message, cookie, currentRoom) => {
+    socket.on('chat', (message, urls, cookie, currentRoom) => {
         const index = cookie.indexOf('"')
         const new_cookie = cookie.slice(index + 1, cookie.length - 1)
 
@@ -124,6 +109,7 @@ io.on('connection', (socket) => {
                     //create a message model
                     const message_instance = {
                         content: message,
+                        urls: urls,
                         in: mongoose.Types.ObjectId(currentRoom),
                         from: {
                             userId: result._id,
