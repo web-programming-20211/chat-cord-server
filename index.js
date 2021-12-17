@@ -15,7 +15,6 @@ const messageRouter = require('./routes/message')
 const reactionRouter = require('./routes/reaction')
 const cookieParser = require('cookie-parser')
 const multer = require('multer')
-const firebaseService = require('./services/firebaseService')
 const Room = require('./models/Room')
 require('dotenv').config()
 
