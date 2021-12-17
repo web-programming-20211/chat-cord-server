@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 
 const messageSchema = new mongoose.Schema({
     content: String,
+    urls: [String],
     in: mongoose.Schema.Types.ObjectId,
     from: {
         fullname: String,
