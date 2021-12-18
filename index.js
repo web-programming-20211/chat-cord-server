@@ -55,11 +55,11 @@ app.use(cors({
     optionsSuccessStatus: 200,
 }))
 
-app.all('/', function(req, res, next) {
+app.all('/', function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     next()
-  });
+});
 
 app.use(express.urlencoded({
     extended: true
@@ -120,7 +120,11 @@ io.on('connection', (socket) => {
                     message_model.save().then(result => {
                         Room.findOne({ _id: currentRoom }).then(room => {
                             if (room) {
-                                room.lastMessage = message
+                                if (message.length === 0) {
+                                    room.lastMessage = user.fullname + ' just sent a file'
+                                } else {
+                                    room.lastMessage = message
+                                }
                                 room.lastMessageDate = result.createdAt
                                 room.save()
                             }
