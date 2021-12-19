@@ -82,10 +82,30 @@ const upload = multer({
 const server = app.listen(port, () => console.log(`Running on port ${port}`))
 
 
+
 const io = socket(server)
+
+const onlineUsers = []
 
 io.on('connection', (socket) => {
     socket.emit('connected')
+
+    socket.on('login', (userId) => {
+        if (!onlineUsers.includes(userId)) {
+            onlineUsers.push(userId)
+        }
+        io.emit('loggedIn', onlineUsers)
+        console.log(onlineUsers)
+    });
+
+    socket.on('logout', (userId) => {
+        if (onlineUsers.includes(userId)) {
+            onlineUsers.splice(onlineUsers.indexOf(userId), 1)
+        }
+        io.emit('loggedOut', onlineUsers)
+        console.log(onlineUsers)
+    });
+
     socket.on('joinRoom', (currentRoom) => {
         if (currentRoom?._id !== -1) {
             socket.join(currentRoom?._id)
