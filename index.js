@@ -15,7 +15,6 @@ const messageRouter = require('./routes/message')
 const reactionRouter = require('./routes/reaction')
 const cookieParser = require('cookie-parser')
 const multer = require('multer')
-const firebaseService = require('./services/firebaseService')
 const Room = require('./models/Room')
 require('dotenv').config()
 
@@ -56,11 +55,11 @@ app.use(cors({
     optionsSuccessStatus: 200,
 }))
 
-app.all('/', function(req, res, next) {
+app.all('/', function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     next()
-  });
+});
 
 app.use(express.urlencoded({
     extended: true
@@ -79,29 +78,34 @@ app.use('/reaction', reactionRouter)
 const upload = multer({
     storage: multer.memoryStorage()
 })
-app.post('/testUpload', upload.single('file'), (req, res) => {
-
-    try {
-        firebaseService.uploadFile(req.file)
-    } catch (error) {
-        console.log(error)
-        return  res.status(404).send(error)
-    }
-    res.status(200).send("File uploaded.")
-        
-})
-
-// app.get('*', (request, response) => {
-//     response.sendFile(path.join(__dirname + '/client/build/index.html'))
-// })
 
 const server = app.listen(port, () => console.log(`Running on port ${port}`))
 
 
+
 const io = socket(server)
+
+const onlineUsers = []
 
 io.on('connection', (socket) => {
     socket.emit('connected')
+
+    socket.on('login', (userId) => {
+        if (!onlineUsers.includes(userId)) {
+            onlineUsers.push(userId)
+        }
+        io.emit('loggedIn', onlineUsers)
+        console.log(onlineUsers)
+    });
+
+    socket.on('logout', (userId) => {
+        if (onlineUsers.includes(userId)) {
+            onlineUsers.splice(onlineUsers.indexOf(userId), 1)
+        }
+        io.emit('loggedOut', onlineUsers)
+        console.log(onlineUsers)
+    });
+
     socket.on('joinRoom', (currentRoom) => {
         if (currentRoom?._id !== -1) {
             socket.join(currentRoom?._id)
@@ -113,7 +117,7 @@ io.on('connection', (socket) => {
     })
 
     //message sending event has been fired from a socket
-    socket.on('chat', (message, cookie, currentRoom) => {
+    socket.on('chat', (message, urls, cookie, currentRoom) => {
         const index = cookie.indexOf('"')
         const new_cookie = cookie.slice(index + 1, cookie.length - 1)
 
@@ -124,6 +128,7 @@ io.on('connection', (socket) => {
                     //create a message model
                     const message_instance = {
                         content: message,
+                        urls: urls,
                         in: mongoose.Types.ObjectId(currentRoom),
                         from: {
                             userId: result._id,
@@ -135,7 +140,11 @@ io.on('connection', (socket) => {
                     message_model.save().then(result => {
                         Room.findOne({ _id: currentRoom }).then(room => {
                             if (room) {
-                                room.lastMessage = message
+                                if (message.length === 0) {
+                                    room.lastMessage = user.fullname + ' just sent a file'
+                                } else {
+                                    room.lastMessage = message
+                                }
                                 room.lastMessageDate = result.createdAt
                                 room.save()
                             }
