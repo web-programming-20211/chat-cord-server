@@ -98,7 +98,7 @@ router.post('/:id/attend', (req, res) => {
     })
 })
 
-//only admin can add user to a private room by gmail
+//only admin can add user to a private/public room by gmail
 router.get('/:id/add/:email', (req, res) => {
   var userId;
   var adminId= req.cookies.userId;
