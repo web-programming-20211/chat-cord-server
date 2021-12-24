@@ -78,7 +78,7 @@ router.post('/:id/attend', (req, res) => {
   Room.findOne({ shortId: req.params.id })
     .then((room) => {
       if(room.isPrivate === true){
-        return res.status(404).json({ msg: 'this room is private' })}
+        return res.status(400).json({ msg: 'this room is private' })}
       Attend.findOne({ roomId: room._id, userId: req.cookies.userId }).then(
         (attend) => {
           if (attend)
@@ -98,14 +98,13 @@ router.post('/:id/attend', (req, res) => {
     })
 })
 
-//add user to a private room by gmail
-router.post('/:id/add/:mail', (req, res) => {
+//only admin can add user to a private room by gmail
+router.get('/:id/add/:email', (req, res) => {
   var userId;
   var adminId= req.cookies.userId;
 
-  User.findOne({ mail: req.params.mail }).then((user) => {
+  User.findOne({ email: req.params.email }).then((user) => {
     userId= user._id.toString()
-    console.log(userId)
   }).catch((error) => {
     res.status(404).json({ msg: "user with this mail not found" });
   })
@@ -115,12 +114,12 @@ router.post('/:id/add/:mail', (req, res) => {
       if(adminId !== room.creator.toString()){
         return res.status(404).json({ msg: 'Only admin can add member' })}
       else {
-      Attend.findOne({ roomId: room._id, userId: req.params.userId }).then(
+      Attend.findOne({ roomId: room._id, userId: userId }).then(
         (attend) => {
           if (attend)
             return res.status(400).json({ msg: room })
           const newAttend = new Attend({
-            userId: req.params.userId,
+            userId: userId,
             roomId: room._id,
           })
           newAttend.save().then((result) => {
