@@ -95,7 +95,6 @@ io.on('connection', (socket) => {
             onlineUsers.push(userId)
         }
         io.emit('loggedIn', onlineUsers)
-        console.log(onlineUsers)
     });
 
     socket.on('logout', (userId) => {
@@ -103,7 +102,6 @@ io.on('connection', (socket) => {
             onlineUsers.splice(onlineUsers.indexOf(userId), 1)
         }
         io.emit('loggedOut', onlineUsers)
-        console.log(onlineUsers)
     });
 
     socket.on('joinRoom', (currentRoom) => {
@@ -165,7 +163,6 @@ io.on('connection', (socket) => {
 
     //reaction event has been fired
     socket.on('get-reaction', (dialog, reactionType, cookie, roomId) => {
-
         //get userinfo
         User.findOne({ _id: cookie }).then(user => {
             React.findOne({
