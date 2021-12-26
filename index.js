@@ -16,6 +16,7 @@ const reactionRouter = require('./routes/reaction')
 const cookieParser = require('cookie-parser')
 const multer = require('multer')
 const Room = require('./models/Room')
+const { createSocket } = require('dgram')
 require('dotenv').config()
 
 
@@ -130,8 +131,9 @@ io.on('connection', (socket) => {
                         in: mongoose.Types.ObjectId(currentRoom),
                         from: {
                             userId: result._id,
-                            fullname: result.fullname,
-                            color: result.color
+                            username: result.username,
+                            color: result.color,
+                            avatar: result.profilePicture,
                         }
                     }
                     const message_model = new Message(message_instance)
@@ -154,10 +156,62 @@ io.on('connection', (socket) => {
         })
     })
 
+    socket.on('set-pin', async (dialog, roomId) => {
+        var msg = null
+        await Message.findOne({ _id: dialog._id }).then(message => {
+            if (message) {
+                message.pinned = !message.pinned
+                message.save()
+                msg = message
+            }
+        })
+
+        await Room.findOne({ _id: roomId }).then(room => {
+            if (room) {
+                let msg = room.pinnedMessages.find(message => message.messageId === dialog._id)
+                if (!msg) {
+                    room.pinnedMessages.push({
+                        messageId: dialog._id,
+                        username: dialog.from.username,
+                        avatar: dialog.from.avatar,
+                        message: dialog.content,
+                        createdAt: dialog.createdAt,
+                        urls: dialog.urls,
+                        color: dialog.from.color,
+                    })
+                }
+                else {
+                    room.pinnedMessages.splice(room.pinnedMessages.indexOf(msg), 1)
+                }
+                room.save()
+            }
+            io.in(roomId).emit('new-pinned-message', msg, roomId, room)
+        })
+    })
+
+    socket.on('remove-pin', (dialog, roomId) => {
+
+    })
+
+
     //delete a message
     socket.on('delete', (id, room) => {
-        Message.deleteOne({ _id: id }).then(result => {
-            socket.to(room._id).emit('dialog-deleted', id)
+        Message.findOne({ _id: id }).then(message => {
+            if (message) {
+                Room.findOne({ _id: message.in }).then(room => {
+                    if (room) {
+                        room.lastMessage = 'A message was deleted'
+                    }
+                    let msg = room.pinnedMessages.find(message => message.messageId === id)
+                    if (msg) {
+                        room.pinnedMessages.splice(room.pinnedMessages.indexOf(msg), 1)
+                    }
+                    room.save()
+                })
+                Message.deleteOne({ _id: id }).then(result => {
+                    socket.to(room._id).emit('dialog-deleted', id)
+                })
+            }
         })
     })
 

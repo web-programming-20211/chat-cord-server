@@ -55,6 +55,7 @@ router.post('/create', (req, res) => {
     isPrivate: isPrivate,
     color: Math.floor(Math.random() * 16777215).toString(16),
     lastMessageDate: new Date(),
+    pinnedMessages: [],
   })
 
   newRoom
