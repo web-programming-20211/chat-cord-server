@@ -3,9 +3,7 @@ const User = require("../models/User")
 const mailService = require("../services/mailService")
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcrypt")
-
-
-
+const constants = require("../const/const")
 router.post("/register", async (req, res) => {
   try {
     const { email, username, password, fullname } = req.body
@@ -49,6 +47,7 @@ router.post("/register", async (req, res) => {
       user.password = hashedPassword
       user.username = username
       user.code = code
+      user.avatar = constants.AVATAR
       user.color = Math.floor(Math.random() * 16777215).toString(16)
       user.save()
     } else {
@@ -69,6 +68,7 @@ router.post("/register", async (req, res) => {
         email: email,
         password: password,
         code: code,
+        avatar : constants.AVATAR,
         color: Math.floor(Math.random() * 16777215).toString(16),
       })
 
@@ -77,6 +77,7 @@ router.post("/register", async (req, res) => {
       newUser.password = hashedPassword
       newUser.save()
     }
+    console.log(constant.avatarUser)
     res.status(200).json({
       msg: "Your account has been successfully created! We'll send a verify code to the email address you used to create the account.",
     })

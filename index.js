@@ -129,9 +129,10 @@ io.on('connection', (socket) => {
                         urls: urls,
                         in: mongoose.Types.ObjectId(currentRoom),
                         from: {
-                            userId: result._id,
-                            fullname: result.fullname,
-                            color: result.color
+                            userId: user._id,
+                            username: user.username,
+                            color: user.color,
+                            avatar: user.avatar
                         }
                     }
                     const message_model = new Message(message_instance)

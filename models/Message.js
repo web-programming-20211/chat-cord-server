@@ -5,9 +5,10 @@ const messageSchema = new mongoose.Schema({
     urls: [String],
     in: mongoose.Schema.Types.ObjectId,
     from: {
-        fullname: String,
+        username: String,
         userId: mongoose.Schema.Types.ObjectId,
-        color: String
+        color: String,
+        avatar: String
     }
 }, {
     timestamps: true,
