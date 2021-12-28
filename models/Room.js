@@ -24,6 +24,10 @@ const RoomSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    avatar: {
+        type: String,
+        default: "",
+    },
     color: {
         type: String,
         required: true,
