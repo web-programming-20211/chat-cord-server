@@ -5,6 +5,7 @@ const User = require('../models/User')
 const Room = require('../models/Room')
 const Attend = require('../models/Attend')
 const mongoose = require('mongoose')
+const constants = require("../const/const")
 
 const router = express.Router()
 
@@ -56,6 +57,7 @@ router.post('/create', (req, res) => {
     color: Math.floor(Math.random() * 16777215).toString(16),
     lastMessageDate: new Date(),
     pinnedMessages: [],
+    avatar: constants.AVATAR,
   })
 
   newRoom
@@ -74,12 +76,31 @@ router.post('/create', (req, res) => {
     })
 })
 
+//update a room
+router.put('/:id', (req, res) => {
+  const id = req.params.id
+  const { name, description, isPrivate, avatar } = req.body
+  var room = {}
+  if (name) room.name = name
+  if (description) room.description = description
+  if (avatar) room.avatar = avatar
+  room.isPrivate = isPrivate
+
+  Room.findOneAndUpdate({ _id: id }, room, { new: true }).then((room) => {
+    res.status(200).json({ msg: "Update successfully" });
+  }
+  ).catch((error) => {
+    res.status(500).json({ msg: error });
+  })
+})
+
 //attend a public room
 router.post('/:id/attend', (req, res) => {
   Room.findOne({ shortId: req.params.id })
     .then((room) => {
-      if(room.isPrivate === true){
-        return res.status(400).json({ msg: 'this room is private' })}
+      if (room.isPrivate === true) {
+        return res.status(400).json({ msg: 'this room is private' })
+      }
       Attend.findOne({ roomId: room._id, userId: req.cookies.userId }).then(
         (attend) => {
           if (attend)
@@ -102,32 +123,33 @@ router.post('/:id/attend', (req, res) => {
 //only admin can add user to a private/public room by gmail
 router.get('/:id/add/:email', (req, res) => {
   var userId;
-  var adminId= req.cookies.userId;
+  var adminId = req.cookies.userId;
 
   User.findOne({ email: req.params.email }).then((user) => {
-    userId= user._id.toString()
+    userId = user._id.toString()
   }).catch((error) => {
     res.status(404).json({ msg: "user with this mail not found" });
   })
 
   Room.findOne({ shortId: req.params.id })
     .then((room) => {
-      if(adminId !== room.creator.toString()){
-        return res.status(404).json({ msg: 'Only admin can add member' })}
+      if (adminId !== room.creator.toString()) {
+        return res.status(404).json({ msg: 'Only admin can add member' })
+      }
       else {
-      Attend.findOne({ roomId: room._id, userId: userId }).then(
-        (attend) => {
-          if (attend)
-            return res.status(400).json({ msg: room })
-          const newAttend = new Attend({
-            userId: userId,
-            roomId: room._id,
-          })
-          newAttend.save().then((result) => {
-            return res.status(200).json({ msg: room })
-          })
-        }
-      )
+        Attend.findOne({ roomId: room._id, userId: userId }).then(
+          (attend) => {
+            if (attend)
+              return res.status(400).json({ msg: room })
+            const newAttend = new Attend({
+              userId: userId,
+              roomId: room._id,
+            })
+            newAttend.save().then((result) => {
+              return res.status(200).json({ msg: room })
+            })
+          }
+        )
       }
     })
     .catch(() => {
