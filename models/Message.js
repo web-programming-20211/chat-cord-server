@@ -9,7 +9,11 @@ const messageSchema = new mongoose.Schema({
         userId: mongoose.Schema.Types.ObjectId,
         color: String,
         avatar: String
-    }
+    },
+    pinned : {
+        type: Boolean,
+        default: false
+    },
 }, {
     timestamps: true,
 })
