@@ -85,7 +85,6 @@ router.put('/:id', (req, res) => {
   if (description) room.description = description
   if (avatar) room.avatar = avatar
   room.isPrivate = isPrivate
-
   Room.findOneAndUpdate({ _id: id }, room, { new: true }).then((room) => {
     res.status(200).json({ msg: "Update successfully" });
   }
@@ -121,38 +120,41 @@ router.post('/:id/attend', (req, res) => {
 })
 
 //only admin can add user to a private/public room by gmail
-router.get('/:id/add/:email', (req, res) => {
+router.post('/:id/add', (req, res) => {
   var userId;
-  var adminId = req.cookies.userId;
-
-  User.findOne({ email: req.params.email }).then((user) => {
-    userId = user._id.toString()
-  }).catch((error) => {
-    res.status(404).json({ msg: "user with this mail not found" });
-  })
-
-  Room.findOne({ shortId: req.params.id })
+  const adminId = req.cookies.userId;
+  Room.findOne({ _id: req.params.id })
     .then((room) => {
-      if (adminId !== room.creator.toString()) {
-        return res.status(404).json({ msg: 'Only admin can add member' })
-      }
-      else {
-        Attend.findOne({ roomId: room._id, userId: userId }).then(
-          (attend) => {
-            if (attend)
-              return res.status(400).json({ msg: room })
-            const newAttend = new Attend({
-              userId: userId,
-              roomId: room._id,
-            })
-            newAttend.save().then((result) => {
-              return res.status(200).json({ msg: room })
-            })
+      req.body.emails.split(',').forEach((email) => {
+        console.log(email)
+        User.findOne({ email: email }).then((user) => {
+          userId = user._id
+          if (adminId !== room.creator.toString()) {
+            return res.status(400).json({ msg: 'only admin can add member' })
           }
-        )
-      }
-    })
-    .catch(() => {
+          else {
+            Attend.findOne({ roomId: room._id, userId: userId }).then(
+              (attend) => {
+                if (attend)
+                  return res.status(400).json({ msg: `user with mail ${email} already in room` })
+                else {
+                  console.log(userId, room._id)
+                  const newAttend = new Attend({
+                    userId: userId,
+                    roomId: room._id,
+                  })
+                  newAttend.save().then((result) => {
+                    return res.status(200).json({ msg: 'add successfully' })
+                  })
+                }
+              }
+            )
+          }
+        }).catch((error) => {
+          return res.status(404).json({ msg: `user with mail ${email} not found` });
+        })
+      })
+    }).catch(() => {
       return res.status(404).json({ msg: 'room not found' })
     })
 })
