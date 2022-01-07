@@ -121,26 +121,22 @@ router.post('/:id/attend', (req, res) => {
 
 //only admin can add user to a private/public room by gmail
 router.post('/:id/add', (req, res) => {
-  var userId;
   const adminId = req.cookies.userId;
   Room.findOne({ _id: req.params.id })
     .then((room) => {
       req.body.emails.split(',').forEach((email) => {
-        console.log(email)
         User.findOne({ email: email }).then((user) => {
-          userId = user._id
           if (adminId !== room.creator.toString()) {
             return res.status(400).json({ msg: 'only admin can add member' })
           }
           else {
-            Attend.findOne({ roomId: room._id, userId: userId }).then(
+            Attend.findOne({ roomId: room._id, userId: user._id }).then(
               (attend) => {
                 if (attend)
                   return res.status(400).json({ msg: `user with mail ${email} already in room` })
                 else {
-                  console.log(userId, room._id)
                   const newAttend = new Attend({
-                    userId: userId,
+                    userId: user._id,
                     roomId: room._id,
                   })
                   newAttend.save().then((result) => {
