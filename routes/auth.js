@@ -51,7 +51,7 @@ router.post("/register", async (req, res) => {
       user.color = Math.floor(Math.random() * 16777215).toString(16)
       user.save()
     } else {
-      let code = Math.floor(1000 + Math.random() * 9999)
+      let code = Math.floor(1000 + Math.random() * 9000)
 
       let mailOptions = {
         from: process.env.MAIL_USER,
@@ -77,7 +77,6 @@ router.post("/register", async (req, res) => {
       newUser.password = hashedPassword
       newUser.save()
     }
-    console.log(constant.avatarUser)
     res.status(200).json({
       msg: "Your account has been successfully created! We'll send a verify code to the email address you used to create the account.",
     })
