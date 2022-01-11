@@ -50,11 +50,19 @@ app.use(express())
 app.use(express.static(path.join(__dirname + '/client/build')))
 const port = process.env.PORT || 8080
 
-app.use(cors({
-    origin: 'https://web-programming-20211.github.io/',
-    credentials: true,
-    optionsSuccessStatus: 200
-}))
+// app.use(cors({
+//     origin: 'https://web-programming-20211.github.io/',
+//     credentials: true,
+//     optionsSuccessStatus: 200
+// }))
+
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", '*')
+    res.header("Access-Control-Allow-Credentials", true)
+    res.header("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT")
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+    next()
+})
 
 app.use(express.urlencoded({
     extended: true
