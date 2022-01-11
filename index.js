@@ -51,7 +51,7 @@ app.use(express.static(path.join(__dirname + '/client/build')))
 const port = process.env.PORT || 8080
 
 app.use(cors({
-    origin: '*',
+    origin: ['https://web-programming-20211.github.io/chat-cord-server/', 'http://localhost:3000'],
     credentials: true,
 }))
 
@@ -78,7 +78,8 @@ const server = app.listen(port, () => console.log(`Running on port ${port}`))
 
 const io = socket(server, {
     cors: {
-      origin: '*',
+        origin: ['https://web-programming-20211.github.io/chat-cord-server/', 'http://localhost:3000'],
+        credentials: true,
     },
   });
 
