@@ -50,12 +50,10 @@ app.use(express())
 app.use(express.static(path.join(__dirname + '/client/build')))
 const port = process.env.PORT || 8080
 
-app.use(cors(
-    cors({
-        origin: 'https://chat-cord-api.herokuapp.com',
-        credentials: true,
-    })
-))
+app.use(cors({
+    origin: 'https://chat-cord-api.herokuapp.com',
+    credentials: true,
+}))
 
 app.use(express.urlencoded({
     extended: true
