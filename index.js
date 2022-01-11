@@ -56,12 +56,12 @@ const port = process.env.PORT || 8080
 app.use(cors({
     origin: ['https://web-programming-20211.github.io', 'http://localhost:3000'],
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'Cookies'],
 }))
 
 app.use(express.urlencoded({
     extended: true
 }))
-
 
 
 app.use('/auth', authRouter)
@@ -82,6 +82,7 @@ const io = socket(server, {
     cors: {
         origin: ['https://web-programming-20211.github.io', 'http://localhost:3000'],
         credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'Cookies'],
     },
   });
 
