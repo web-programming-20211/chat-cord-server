@@ -52,7 +52,8 @@ const port = process.env.PORT || 8080
 
 app.use(cors({
     origin: 'https://web-programming-20211.github.io/',
-    credentials: true
+    credentials: true,
+    optionsSuccessStatus: 200
 }))
 
 app.use(express.urlencoded({
