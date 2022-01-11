@@ -63,6 +63,18 @@ app.use(express.urlencoded({
     extended: true
 }))
 
+app.use(session({
+    secret: 'keyboard cat',
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+        httpOnly: false,
+        secure: false,
+    }
+}))
+
+
 app.use('/auth', authRouter)
 app.use('/user', userRouter)
 app.use('/room', roomRouter)
