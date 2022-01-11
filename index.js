@@ -50,13 +50,10 @@ app.use(express())
 app.use(express.static(path.join(__dirname + '/client/build')))
 const port = process.env.PORT || 8080
 
-app.use(function (req, res, next) {
-    res.header("Access-Control-Allow-Origin", 'https://web-programming-20211.github.io');
-    res.header("Access-Control-Allow-Credentials", true);
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-    res.header("Access-Control-Allow-Headers", 'Origin,X-Requested-With,Content-Type,Accept,content-type,application/json');
-    next();
-});
+app.use(cors({
+    origin: 'https://web-programming-20211.github.io/chat-cord-client/',
+    credentials: true
+}))
 
 app.use(express.urlencoded({
     extended: true
