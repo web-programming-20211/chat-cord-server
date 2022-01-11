@@ -51,7 +51,7 @@ app.use(express.static(path.join(__dirname + '/client/build')))
 const port = process.env.PORT || 8080
 
 app.use(cors({
-    origin: 'https://web-programming-20211.github.io',
+    origin: "*",
     credentials: true,
 }))
 
@@ -78,10 +78,10 @@ const server = app.listen(port, () => console.log(`Running on port ${port}`))
 
 const io = socket(server, {
     cors: {
-      origin: "https://web-programming-20211.github.io",
+      origin: "*",
     },
   });
-  
+
 const onlineUsers = []
 
 io.on('connection', (socket) => {
