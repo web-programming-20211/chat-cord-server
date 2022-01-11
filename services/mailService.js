@@ -2,7 +2,7 @@ var nodemailer = require("nodemailer");
 
 var transporter = nodemailer.createTransport({
   service: "yandex",
-  secure: true,
+  secure: false,
   auth: {
     user: "phngdung@yandex.com",
     pass: "abcD123$",

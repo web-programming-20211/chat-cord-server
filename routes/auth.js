@@ -77,7 +77,6 @@ router.post("/register", async (req, res) => {
       newUser.password = hashedPassword
       newUser.save()
     }
-    console.log(constant.avatarUser)
     res.status(200).json({
       msg: "Your account has been successfully created! We'll send a verify code to the email address you used to create the account.",
     })
