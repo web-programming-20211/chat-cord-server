@@ -51,7 +51,7 @@ app.use(express.static(path.join(__dirname + '/client/build')))
 const port = process.env.PORT || 8080
 
 app.use(cors({
-    origin: "https://web-programming-20211.github.io/chat-cord-client/",
+    origin: "https://web-programming-20211.github.io/",
     credentials: true,
 }))
 
