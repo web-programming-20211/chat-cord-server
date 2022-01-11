@@ -50,11 +50,7 @@ app.use(express())
 app.use(express.static(path.join(__dirname + '/client/build')))
 const port = process.env.PORT || 8080
 
-app.use(cors({
-    origin: '*',
-    credentials: true,
-    optionsSuccessStatus: 200,
-}))
+app.use(cors())
 
 app.all('/', function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
