@@ -20,21 +20,9 @@ const { createSocket } = require('dgram')
 require('dotenv').config()
 
 
-try {
-    mongoose.connect(
-        "mongodb://127.0.0.1:27017/chat", {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-    },
-    )
-} catch (e) {
-    console.log('failed')
-}
-
-
 // try {
 //     mongoose.connect(
-//         process.env.MONGO_URL, {
+//         "mongodb://127.0.0.1:27017/chat", {
 //         useNewUrlParser: true,
 //         useUnifiedTopology: true
 //     },
@@ -42,6 +30,17 @@ try {
 // } catch (e) {
 //     console.log('failed')
 // }
+
+try {
+    mongoose.connect(
+        process.env.MONGO_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+    },
+    )
+} catch (e) {
+    console.log('failed')
+}
 
 const db = mongoose.connection
 db.on('error', console.error.bind(console, 'error:'))
