@@ -144,11 +144,10 @@ router.post("/login", async (req, res) => {
         msg: "wrong password",
       })
 
-    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: "30d" })
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "30d" })
     
     return res.status(200).json({
       token: token,
-      user: user,
     })
 
   } catch (err) {
@@ -156,27 +155,6 @@ router.post("/login", async (req, res) => {
       msg: "Server error",
     })
   }
-})
-
-router.post("/testMail", async (req, res) => {
-
-  let mailOptions = {
-    from: process.env.MAIL_USER,
-    to: "dung1@yopmail.com",
-    subject: "CHAT WEB NOTIFICATION",
-    text: "Test send mail",
-  }
-
-  try {
-    mailService.sendMail(mailOptions)
-    res.status(200).json({ msg: "OK" })
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ msg: error });
-    // expected output: ReferenceError: nonExistentFunction is not defined
-    // Note - error messages will vary depending on browser
-  }
-  
 })
 
 module.exports = router

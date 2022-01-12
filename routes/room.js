@@ -11,7 +11,11 @@ const router = express.Router()
 
 //get full list of rooms that user has attended
 router.get('/retrieve', (req, res) => {
-  const id = req.cookies.userId
+  const user = req.user;
+  if (!user) {
+      return res.status(404).json({ msg: "You are not authorized to access this resource" });
+  }
+  const id = req.user._id
   Attend.find({ userId: id })
     .then((rooms) => {
       const promises = []
@@ -32,6 +36,10 @@ router.get('/retrieve', (req, res) => {
 
 // get room by id 
 router.get('/:id', (req, res) => {
+  const user = req.user;
+  if (!user) {
+      return res.status(404).json({ msg: "You are not authorized to access this resource" });
+  }
   const id = req.params.id
   Room.findOne({ _id: id })
     .then((room) => {
@@ -45,7 +53,12 @@ router.get('/:id', (req, res) => {
 
 //create a room
 router.post('/create', (req, res) => {
-  const userId = req.cookies.userId
+  const user = req.user;
+  if (!user) {
+      return res.status(404).json({ msg: "You are not authorized to access this resource" });
+  }
+
+  const userId = req.user._id
   const { name, description, isPrivate } = req.body
 
   const newRoom = new Room({
@@ -78,6 +91,11 @@ router.post('/create', (req, res) => {
 
 //update a room
 router.put('/:id', (req, res) => {
+  const user = req.user;
+  if (!user) {
+      return res.status(404).json({ msg: "You are not authorized to access this resource" });
+  }
+
   const id = req.params.id
   const { name, description, isPrivate, avatar } = req.body
   var room = {}
@@ -95,12 +113,17 @@ router.put('/:id', (req, res) => {
 
 //attend a public room
 router.post('/:id/attend', (req, res) => {
+  const user = req.user;
+  if (!user) {
+      return res.status(404).json({ msg: "You are not authorized to access this resource" });
+  }
+
   Room.findOne({ shortId: req.params.id })
     .then((room) => {
       if (room.isPrivate === true) {
         return res.status(400).json({ msg: 'this room is private' })
       }
-      Attend.findOne({ roomId: room._id, userId: req.cookies.userId }).then(
+      Attend.findOne({ roomId: room._id, userId: req.user._id }).then(
         (attend) => {
           if (attend)
             return res.status(400).json({ msg: room })
@@ -121,7 +144,12 @@ router.post('/:id/attend', (req, res) => {
 
 //only admin can add user to a private/public room by gmail
 router.post('/:id/add', (req, res) => {
-  const adminId = req.cookies.userId;
+  const user = req.user;
+  if (!user) {
+      return res.status(404).json({ msg: "You are not authorized to access this resource" });
+  }
+
+  const adminId = req.user._id;
   Room.findOne({ _id: req.params.id })
     .then((room) => {
       req.body.emails.split(',').forEach((email) => {
@@ -157,7 +185,11 @@ router.post('/:id/add', (req, res) => {
 
 //leave the room
 router.post('/:id/leave', (req, res) => {
-  const userId = req.cookies.userId
+  const user = req.user;
+  if (!user) {
+      return res.status(404).json({ msg: "You are not authorized to access this resource" });
+  }
+  const userId = req.user._id
   const roomId = req.params.id
   Attend.deleteOne({ roomId: roomId, userId: userId }).then(() => {
     res.status(200).json({ msg: 'success' })
@@ -169,6 +201,11 @@ router.post('/:id/leave', (req, res) => {
 
 // get members of a room
 router.get('/:id/members', (req, res) => {
+  const user = req.user;
+  if (!user) {
+      return res.status(404).json({ msg: "You are not authorized to access this resource" });
+  }
+  
   const roomId = req.params.id
   Attend.find({ roomId: roomId }).then((rooms) => {
     const promises = []

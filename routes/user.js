@@ -3,6 +3,10 @@ const User = require("../models/User")
 const bcrypt = require("bcrypt")
 
 router.get('/find', (req, res) => {
+    const user = req.user;
+    if (!user) {
+        return res.status(404).json({ msg: "You are not authorized to access this resource" });
+    }
     User.findOne({ _id: req.cookies.userId }).then((user) => {
         res.status(200).json({ msg: user });
     }).catch((error) => {
@@ -11,7 +15,11 @@ router.get('/find', (req, res) => {
 })
 
 router.put('/:id', async (req, res) => {
-    const userId = req.params.id
+    const user = req.user;
+    if (!user) {
+        return res.status(404).json({ msg: "You are not authorized to access this resource" });
+    }
+    const userId = user._id;
     const { fullname, username, password, avatar } = req.body
     var userInfo = {}
     if (fullname) userInfo.fullname = fullname

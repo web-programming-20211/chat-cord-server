@@ -64,10 +64,10 @@ app.use(express.urlencoded({
 }))
 
 app.use('/auth', authRouter)
-app.use('/user', userRouter)
-app.use('/room', roomRouter)
-app.use('/message', messageRouter)
-app.use('/reaction', reactionRouter)
+app.use('/user', authMiddleware, userRouter)
+app.use('/room', authMiddleware, roomRouter)
+app.use('/message', authMiddleware, messageRouter)
+app.use('/reaction', authMiddleware, reactionRouter)
 
 
 const upload = multer({
