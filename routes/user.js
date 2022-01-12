@@ -1,5 +1,6 @@
 const router = require("express").Router()
 const User = require("../models/User")
+const Message = require("../models/Message")
 const bcrypt = require("bcrypt")
 
 router.get('/find', (req, res) => {
@@ -24,10 +25,18 @@ router.put('/:id', async (req, res) => {
     if (avatar) userInfo.avatar = avatar
 
     User.findOneAndUpdate({ _id: userId }, userInfo, { new: true }).then((user) => {
-        res.status(200).json({ msg: "Update successfully" });
+        Message.find({'from.userId': user._id}).then((messages) => {
+            if(messages) {
+                messages.forEach(message => {
+                    message.from.avatar = user.avatar
+                    message.save()
+                })
+            }
+        })
+        return res.status(200).json({ msg: "Update successfully" });
     }
     ).catch((error) => {
-        res.status(500).json({ msg: error });
+        return res.status(500).json({ msg: error });
     })
 })
 
