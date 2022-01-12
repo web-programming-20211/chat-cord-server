@@ -149,7 +149,7 @@ io.on('connection', (socket) => {
                                 room.save()
                             }
                         })
-                        io.emit('your_new_message', result, currentRoom)
+                        io.in(currentRoom).emit('your_new_message', result, currentRoom)
                     })
                 })
             }
