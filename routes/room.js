@@ -95,7 +95,6 @@ router.put('/:id', (req, res) => {
   if (!user) {
       return res.status(404).json({ msg: "You are not authorized to access this resource" });
   }
-
   const id = req.params.id
   const { name, description, isPrivate, avatar } = req.body
   var room = {}
@@ -128,7 +127,7 @@ router.post('/:id/attend', (req, res) => {
           if (attend)
             return res.status(400).json({ msg: room })
           const newAttend = new Attend({
-            userId: req.cookies.userId,
+            userId: user._id,
             roomId: room._id,
           })
           newAttend.save().then((result) => {
@@ -143,7 +142,7 @@ router.post('/:id/attend', (req, res) => {
 })
 
 //only admin can add user to a private/public room by gmail
-router.post('/:id/add', (req, res) => {
+router.post('/:id/addMember', (req, res) => {
   const user = req.user;
   if (!user) {
       return res.status(404).json({ msg: "You are not authorized to access this resource" });

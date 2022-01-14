@@ -12,10 +12,9 @@ const reactSchema = new mongoose.Schema({
 const React = mongoose.model('React', reactSchema, 'react')
 
 const getReactionsByMessage = (reacts) => {
-    const result = []
+    let result = []
     reacts.forEach(react => {
         const index = result.findIndex(react_instance => react_instance.reaction_type === react.react_id)
-
         if (index !== -1) {
             result[index].from.push(react.from)
         } else {

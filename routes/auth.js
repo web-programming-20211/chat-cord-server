@@ -144,7 +144,7 @@ router.post("/login", async (req, res) => {
         msg: "wrong password",
       })
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "30d" })
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" })
     
     return res.status(200).json({
       token: token,
@@ -152,7 +152,7 @@ router.post("/login", async (req, res) => {
 
   } catch (err) {
     res.status(500).json({
-      msg: "Server error",
+      msg: err.message,
     })
   }
 })

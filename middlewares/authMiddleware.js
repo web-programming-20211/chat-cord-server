@@ -21,6 +21,12 @@ const auth = async (req, res, next) => {
             if (user) {
                 req.user = user;
             }
+            
+            if(decoded.exp < Date.now() / 1000) {
+                return res
+                    .status(401)
+                    .send({ msg: 'Your token has expired' });
+            }
         }
         next();
     } catch (err) {

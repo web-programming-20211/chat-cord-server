@@ -20,20 +20,9 @@ const { createSocket } = require('dgram')
 require('dotenv').config()
 
 
-// try {
-//     mongoose.connect(
-//         "mongodb://127.0.0.1:27017/chat", {
-//         useNewUrlParser: true,
-//         useUnifiedTopology: true
-//     },
-//     )
-// } catch (e) {
-//     console.log('failed')
-// }
-
 try {
     mongoose.connect(
-        process.env.MONGO_URL, {
+        "mongodb://127.0.0.1:27017/chat", {
         useNewUrlParser: true,
         useUnifiedTopology: true
     },
@@ -41,6 +30,17 @@ try {
 } catch (e) {
     console.log('failed')
 }
+
+// try {
+//     mongoose.connect(
+//         process.env.MONGO_URL, {
+//         useNewUrlParser: true,
+//         useUnifiedTopology: true
+//     },
+//     )
+// } catch (e) {
+//     console.log('failed')
+// }
 
 app.use(express.json())
 app.use(cookieParser())
@@ -115,43 +115,34 @@ io.on('connection', (socket) => {
     })
 
     //message sending event has been fired from a socket
-    socket.on('chat', (message, urls, cookie, currentRoom) => {
-        const index = cookie.indexOf('"')
-        const new_cookie = cookie.slice(index + 1, cookie.length - 1)
-
-        User.findOne({ _id: new_cookie }).then(result => {
-            if (result) {
-                //get userinfo
-                User.findOne({ _id: new_cookie }).then(user => {
-                    //create a message model
-                    const message_instance = {
-                        content: message,
-                        urls: urls,
-                        in: mongoose.Types.ObjectId(currentRoom),
-                        from: {
-                            userId: user._id,
-                            username: user.username,
-                            color: user.color,
-                            avatar: user.avatar
-                        }
-                    }
-                    const message_model = new Message(message_instance)
-                    message_model.save().then(result => {
-                        Room.findOne({ _id: currentRoom }).then(room => {
-                            if (room) {
-                                if (message.length === 0) {
-                                    room.lastMessage = user.fullname + ' just sent a file'
-                                } else {
-                                    room.lastMessage = message
-                                }
-                                room.lastMessageDate = result.createdAt
-                                room.save()
-                            }
-                        })
-                        io.emit('your_new_message', result, currentRoom)
-                    })
-                })
+    socket.on('chat', (message, urls, userId, currentRoom) => {
+        User.findOne({ _id: userId }).then(user => {
+            const message_instance = {
+                content: message,
+                urls: urls,
+                in: mongoose.Types.ObjectId(currentRoom),
+                from: {
+                    userId: user._id,
+                    username: user.username,
+                    color: user.color,
+                    avatar: user.avatar
+                }
             }
+            const message_model = new Message(message_instance)
+            message_model.save().then(result => {
+                Room.findOne({ _id: currentRoom }).then(room => {
+                    if (room) {
+                        if (message.length === 0) {
+                            room.lastMessage = user.fullname + ' just sent a file'
+                        } else {
+                            room.lastMessage = message
+                        }
+                        room.lastMessageDate = result.createdAt
+                        room.save()
+                    }
+                })
+                io.emit('your_new_message', result, currentRoom)
+            })
         })
     })
 

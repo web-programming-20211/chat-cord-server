@@ -7,7 +7,7 @@ router.get('/find', (req, res) => {
     if (!user) {
         return res.status(404).json({ msg: "You are not authorized to access this resource" });
     }
-    User.findOne({ _id: req.cookies.userId }).then((user) => {
+    User.findOne({ _id: user._id }).then((user) => {
         res.status(200).json({ msg: user });
     }).catch((error) => {
         res.status(500).json({ msg: error });
