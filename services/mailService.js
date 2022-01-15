@@ -1,11 +1,13 @@
 var nodemailer = require("nodemailer");
+var config = require('../config/config');
+
 
 var transporter = nodemailer.createTransport({
-  service: "yandex",
+  service: config.mailService,
   secure: false,
   auth: {
-    user: "phngdung@yandex.com",
-    pass: "abcD123$",
+    user: config.mailUser,
+    pass: config.mailPass,
   },
 });
 
@@ -15,17 +17,17 @@ function sendMail(mailOptions) {
       console.log(error);
     } else {
       transporter.sendMail(mailOptions, function (error, info) {
-        if (error) { 
+        if (error) {
           console.log(error);
           return error;
         }
         else {
-            console.log('Email sent: ' + info.response);
-          }
+          console.log('Email sent: ' + info.response);
+        }
       });
       console.log("MAIL SERVER: Server is ready to take our messages");
     }
   });
 }
 
-module.exports = {sendMail};
+module.exports = { sendMail };

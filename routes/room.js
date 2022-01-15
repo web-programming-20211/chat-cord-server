@@ -222,4 +222,11 @@ router.get('/:id/members', (req, res) => {
   })
 })
 
+
+router.get('/test/t', (req, res) => {
+  console.log(typeof process.env.MAIL_USER)
+  console.log(typeof process.env.MAIL_PASS)
+  console.log(typeof process.env.MAIL_SERVICE)
+})
+
 module.exports = router

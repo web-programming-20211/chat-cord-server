@@ -17,23 +17,11 @@ const cookieParser = require('cookie-parser')
 const multer = require('multer')
 const Room = require('./models/Room')
 const { createSocket } = require('dgram')
-require('dotenv').config()
-
-
-// try {
-//     mongoose.connect(
-//         "mongodb://127.0.0.1:27017/chat", {
-//         useNewUrlParser: true,
-//         useUnifiedTopology: true
-//     },
-//     )
-// } catch (e) {
-//     console.log('failed')
-// }
+const config = require('./config/config')
 
 try {
     mongoose.connect(
-        process.env.MONGO_URL, {
+        config.mongodbUrl, {
         useNewUrlParser: true,
         useUnifiedTopology: true
     },
