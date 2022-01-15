@@ -11,7 +11,7 @@ router.get('/retrieve', (req, res) => {
         if(result)
         {
             const reactions = getReactionsByMessage(result)
-            res.status(200).send({ reactions })
+            res.send({ reactions })
         }
     })
 })

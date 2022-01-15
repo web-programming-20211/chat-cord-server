@@ -147,8 +147,7 @@ router.post('/:id/addMember', (req, res) => {
   if (!user) {
       return res.status(404).json({ msg: "You are not authorized to access this resource" });
   }
-
-  const adminId = req.user._id;
+  const adminId = user._id.toString();
   Room.findOne({ _id: req.params.id })
     .then((room) => {
       req.body.emails.split(',').forEach((email) => {
@@ -220,13 +219,6 @@ router.get('/:id/members', (req, res) => {
   }).catch(() => {
     res.status(404).json({ msg: 'room not found' })
   })
-})
-
-
-router.get('/test/t', (req, res) => {
-  console.log(typeof process.env.MAIL_USER)
-  console.log(typeof process.env.MAIL_PASS)
-  console.log(typeof process.env.MAIL_SERVICE)
 })
 
 module.exports = router
