@@ -1,21 +1,38 @@
 const jwt = require('jsonwebtoken')
 const User = require('../models/User')
+const config = require('../config/config')
 
 const auth = async (req, res, next) => {
-    const token = req.header('Authorization')
-    const data = jwt.verify(token, process.env.JWT_SECRET)
-
     try {
-        const user = await User.findOne({ _id: data._id })
+        let token;
+        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+            token = req.headers.authorization.split(' ')[1];
+        }
+        
+        if (!req.headers.authorization) {
+            next();
+            return res
+                .status(401)
+                .send({ msg: 'You are not authorized to access this resource' });
+        }
 
-        !user && res.status(401).send({ error: 'Not authorized to access this resource' })
-
-        res.cookie('userId', data._id)
-
-        next()
-    } catch (error) {
-        res.status(401).send({ error: 'Not authorized to access this resource' })
+        const decoded = jwt.verify(token, config.jwtSecret);
+        if (decoded) {
+            let user = await User.findById(decoded.id);
+            if (user) {
+                req.user = user;
+            }
+            
+            if(decoded.exp < Date.now() / 1000) {
+                return res
+                    .status(401)
+                    .send({ msg: 'Your token has expired' });
+            }
+        }
+        next();
+    } catch (err) {
+        return res.status(401).send({ msg: 'You are not authorized to access this resource' });
     }
+};
 
-}
 module.exports = auth

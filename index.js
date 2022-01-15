@@ -17,23 +17,11 @@ const cookieParser = require('cookie-parser')
 const multer = require('multer')
 const Room = require('./models/Room')
 const { createSocket } = require('dgram')
-require('dotenv').config()
-
-
-// try {
-//     mongoose.connect(
-//         "mongodb://127.0.0.1:27017/chat", {
-//         useNewUrlParser: true,
-//         useUnifiedTopology: true
-//     },
-//     )
-// } catch (e) {
-//     console.log('failed')
-// }
+const config = require('./config/config')
 
 try {
     mongoose.connect(
-        process.env.MONGO_URL, {
+        config.mongodbUrl, {
         useNewUrlParser: true,
         useUnifiedTopology: true
     },
@@ -41,6 +29,9 @@ try {
 } catch (e) {
     console.log('failed')
 }
+
+app.use(express.json())
+app.use(cookieParser())
 
 const db = mongoose.connection
 db.on('error', console.error.bind(console, 'error:'))
@@ -51,29 +42,20 @@ app.use(express.static(path.join(__dirname + '/client/build')))
 const port = process.env.PORT || 8080
 
 app.use(cors({
-    origin: '*',
+    origin: ['https://web-programming-20211.github.io', 'http://localhost:3000'],
     credentials: true,
-    optionsSuccessStatus: 200,
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'Cookies'],
 }))
-
-app.all('/', function (req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    next()
-});
 
 app.use(express.urlencoded({
     extended: true
 }))
 
-app.use(express.json())
-app.use(cookieParser())
-
 app.use('/auth', authRouter)
-app.use('/user', userRouter)
-app.use('/room', roomRouter)
-app.use('/message', messageRouter)
-app.use('/reaction', reactionRouter)
+app.use('/user', authMiddleware, userRouter)
+app.use('/room', authMiddleware, roomRouter)
+app.use('/message', authMiddleware, messageRouter)
+app.use('/reaction', authMiddleware, reactionRouter)
 
 
 const upload = multer({
@@ -83,8 +65,13 @@ const upload = multer({
 const server = app.listen(port, () => console.log(`Running on port ${port}`))
 
 
-
-const io = socket(server)
+const io = socket(server, {
+    cors: {
+        origin: ['https://web-programming-20211.github.io', 'http://localhost:3000'],
+        credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'Cookies'],
+    },
+});
 
 const onlineUsers = []
 
@@ -116,43 +103,34 @@ io.on('connection', (socket) => {
     })
 
     //message sending event has been fired from a socket
-    socket.on('chat', (message, urls, cookie, currentRoom) => {
-        const index = cookie.indexOf('"')
-        const new_cookie = cookie.slice(index + 1, cookie.length - 1)
-
-        User.findOne({ _id: new_cookie }).then(result => {
-            if (result) {
-                //get userinfo
-                User.findOne({ _id: new_cookie }).then(user => {
-                    //create a message model
-                    const message_instance = {
-                        content: message,
-                        urls: urls,
-                        in: mongoose.Types.ObjectId(currentRoom),
-                        from: {
-                            userId: user._id,
-                            username: user.username,
-                            color: user.color,
-                            avatar: user.avatar
-                        }
-                    }
-                    const message_model = new Message(message_instance)
-                    message_model.save().then(result => {
-                        Room.findOne({ _id: currentRoom }).then(room => {
-                            if (room) {
-                                if (message.length === 0) {
-                                    room.lastMessage = user.fullname + ' just sent a file'
-                                } else {
-                                    room.lastMessage = message
-                                }
-                                room.lastMessageDate = result.createdAt
-                                room.save()
-                            }
-                        })
-                        io.in(currentRoom).emit('your_new_message', result, currentRoom)
-                    })
-                })
+    socket.on('chat', (message, urls, userId, currentRoom) => {
+        User.findOne({ _id: userId }).then(user => {
+            const message_instance = {
+                content: message,
+                urls: urls,
+                in: mongoose.Types.ObjectId(currentRoom),
+                from: {
+                    userId: user._id,
+                    username: user.username,
+                    color: user.color,
+                    avatar: user.avatar
+                }
             }
+            const message_model = new Message(message_instance)
+            message_model.save().then(result => {
+                Room.findOne({ _id: currentRoom }).then(room => {
+                    if (room) {
+                        if (message.length === 0) {
+                            room.lastMessage = user.fullname + ' just sent a file'
+                        } else {
+                            room.lastMessage = message
+                        }
+                        room.lastMessageDate = result.createdAt
+                        room.save()
+                    }
+                })
+                io.emit('your_new_message', result, currentRoom)
+            })
         })
     })
 
