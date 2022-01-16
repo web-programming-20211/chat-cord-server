@@ -93,8 +93,8 @@ io.on('connection', (socket) => {
     });
 
     socket.on('joinRoom', (currentRoom) => {
-        if (currentRoom?._id !== -1) {
-            socket.join(currentRoom?._id)
+        if (currentRoom !== -1) {
+            socket.join(currentRoom)
         }
     })
 
@@ -105,32 +105,34 @@ io.on('connection', (socket) => {
     //message sending event has been fired from a socket
     socket.on('chat', (message, urls, userId, currentRoom) => {
         User.findOne({ _id: userId }).then(user => {
-            const message_instance = {
-                content: message,
-                urls: urls,
-                in: mongoose.Types.ObjectId(currentRoom),
-                from: {
-                    userId: user._id,
-                    username: user.username,
-                    color: user.color,
-                    avatar: user.avatar
-                }
-            }
-            const message_model = new Message(message_instance)
-            message_model.save().then(result => {
-                Room.findOne({ _id: currentRoom }).then(room => {
-                    if (room) {
-                        if (message.length === 0) {
-                            room.lastMessage = user.fullname + ' just sent a file'
-                        } else {
-                            room.lastMessage = message
-                        }
-                        room.lastMessageDate = result.createdAt
-                        room.save()
+            if (user) {
+                const message_instance = {
+                    content: message,
+                    urls: urls,
+                    in: mongoose.Types.ObjectId(currentRoom),
+                    from: {
+                        userId: user._id,
+                        username: user.username,
+                        color: user.color,
+                        avatar: user.avatar
                     }
+                }
+                const message_model = new Message(message_instance)
+                message_model.save().then(result => {
+                    Room.findOne({ _id: currentRoom }).then(room => {
+                        if (room) {
+                            if (message.length === 0) {
+                                room.lastMessage = user.fullname + ' just sent a file'
+                            } else {
+                                room.lastMessage = message
+                            }
+                            room.lastMessageDate = result.createdAt
+                            room.save()
+                        }
+                    })
+                    io.emit('your_new_message', result, currentRoom)
                 })
-                io.emit('your_new_message', result, currentRoom)
-            })
+            }
         })
     })
 
@@ -163,12 +165,8 @@ io.on('connection', (socket) => {
                 }
                 room.save()
             }
-            io.in(roomId).emit('new-pinned-message', msg, roomId, room)
+            io.emit('new-pinned-message', msg, roomId, room)
         })
-    })
-
-    socket.on('remove-pin', (dialog, roomId) => {
-
     })
 
 
@@ -187,19 +185,19 @@ io.on('connection', (socket) => {
                     room.save()
                 })
                 Message.deleteOne({ _id: id }).then(result => {
-                    socket.to(room._id).emit('dialog-deleted', id)
+                    io.emit('dialog-deleted', id)
                 })
             }
         })
     })
 
     //reaction event has been fired
-    socket.on('get-reaction', (dialog, reactionType, cookie, roomId) => {
+    socket.on('get-reaction', (dialog, reactionType, user_id, roomId) => {
         //get userinfo
-        User.findOne({ _id: cookie }).then(user => {
+        User.findOne({ _id: user_id }).then(user => {
             React.findOne({
                 react_at: dialog._id, from: {
-                    userId: mongoose.Types.ObjectId(cookie),
+                    userId: mongoose.Types.ObjectId(user_id),
                     username: user.username
                 }
             }).then(react_info => {
@@ -215,8 +213,6 @@ io.on('connection', (socket) => {
                     } else {
                         react_info.react_id = reactionType
                         react_info.save(err => {
-                            if (err)
-                                handleError(err)
                             React.find({ react_at: dialog._id }).then(result => {
                                 const edited_list = getReactionsByMessage(result)
                                 socket.to(roomId).emit('return-reaction', edited_list)
@@ -228,7 +224,7 @@ io.on('connection', (socket) => {
                         react_id: reactionType,
                         react_at: mongoose.Types.ObjectId(dialog._id),
                         from: {
-                            userId: mongoose.Types.ObjectId(cookie),
+                            userId: mongoose.Types.ObjectId(user_id),
                             username: user.username
                         }
                     })
@@ -237,7 +233,7 @@ io.on('connection', (socket) => {
                         if (err) handleError(err)
                         React.find({ react_at: dialog._id }).then(result => {
                             const edited_list = getReactionsByMessage(result)
-                            socket.to(roomId).emit('return-reaction', edited_list)
+                            io.emit('return-reaction', edited_list)
                         })
                     })
                 }
