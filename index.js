@@ -18,6 +18,7 @@ const multer = require('multer')
 const Room = require('./models/Room')
 const { createSocket } = require('dgram')
 const config = require('./config/config')
+const console = require('console')
 
 try {
     mongoose.connect(
@@ -93,13 +94,13 @@ io.on('connection', (socket) => {
     });
 
     socket.on('joinRoom', (currentRoom) => {
-        if (currentRoom !== -1) {
-            socket.join(currentRoom)
-        }
+        console.log("joinRoom", currentRoom)
+        socket.join(currentRoom)
     })
 
     socket.on('leaveRoom', (currentRoom) => {
-        socket.leave(currentRoom?._id)
+        console.log("leaveRoom", currentRoom)
+        socket.leave(currentRoom)
     })
 
     //message sending event has been fired from a socket
@@ -130,7 +131,7 @@ io.on('connection', (socket) => {
                             room.save()
                         }
                     })
-                    io.emit('your_new_message', result, currentRoom)
+                    io.in(currentRoom).emit('new_message', result, currentRoom)
                 })
             }
         })
@@ -171,7 +172,7 @@ io.on('connection', (socket) => {
 
 
     //delete a message
-    socket.on('delete', (id, room) => {
+    socket.on('delete', (id, roomId) => {
         Message.findOne({ _id: id }).then(message => {
             if (message) {
                 Room.findOne({ _id: message.in }).then(room => {
@@ -185,7 +186,7 @@ io.on('connection', (socket) => {
                     room.save()
                 })
                 Message.deleteOne({ _id: id }).then(result => {
-                    io.emit('dialog-deleted', id)
+                    io.in(roomId).emit('dialog-deleted', id)
                 })
             }
         })
@@ -207,7 +208,7 @@ io.on('connection', (socket) => {
                             React.find({ react_at: dialog._id }).then(result => {
                                 const edited_list = getReactionsByMessage(result)
                                 edited_list._id = dialog._id
-                                socket.to(roomId).emit('return-reaction', edited_list)
+                                io.to(roomId).emit('return-reaction', edited_list)
                             })
                         })
                     } else {
@@ -215,7 +216,7 @@ io.on('connection', (socket) => {
                         react_info.save(err => {
                             React.find({ react_at: dialog._id }).then(result => {
                                 const edited_list = getReactionsByMessage(result)
-                                socket.to(roomId).emit('return-reaction', edited_list)
+                                io.to(roomId).emit('return-reaction', edited_list)
                             })
                         })
                     }
@@ -233,7 +234,7 @@ io.on('connection', (socket) => {
                         if (err) handleError(err)
                         React.find({ react_at: dialog._id }).then(result => {
                             const edited_list = getReactionsByMessage(result)
-                            io.emit('return-reaction', edited_list)
+                            io.to(roomId).emit('return-reaction', edited_list)
                         })
                     })
                 }

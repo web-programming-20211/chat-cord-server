@@ -68,7 +68,7 @@ router.post("/register", async (req, res) => {
         email: email,
         password: password,
         code: code,
-        avatar : constants.AVATAR,
+        avatar: constants.AVATAR,
         color: Math.floor(Math.random() * 16777215).toString(16),
       })
 
@@ -123,38 +123,31 @@ router.post("/verify", async (req, res) => {
 })
 
 router.post("/login", async (req, res) => {
-  try {
-    const user = await User.findOne({
-      email: req.body.email,
-      active: true,
+  const user = await User.findOne({
+    email: req.body.email,
+    active: true,
+  })
+
+  if (!user)
+    return res.status(404).json({
+      msg: "user not found",
     })
 
-    if (!user)
-      return res.status(404).json({
-        msg: "user not found",
-      })
+  const validPassword = await bcrypt.compare(
+    req.body.password,
+    user.password
+  )
 
-    const validPassword = await bcrypt.compare(
-      req.body.password,
-      user.password
-    )
-
-    if (!validPassword)
-      return res.status(400).json({
-        msg: "wrong password",
-      })
-
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" })
-    
-    return res.status(200).json({
-      token: token,
+  if (!validPassword)
+    return res.status(400).json({
+      msg: "wrong password",
     })
 
-  } catch (err) {
-    res.status(500).json({
-      msg: err.message,
-    })
-  }
+  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" })
+
+  return res.status(200).json({
+    token: token,
+  })
 })
 
 module.exports = router
