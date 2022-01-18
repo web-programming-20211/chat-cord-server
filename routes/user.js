@@ -3,16 +3,13 @@ const User = require("../models/User")
 const Message = require("../models/Message")
 const bcrypt = require("bcrypt")
 
-router.get('/find', (req, res) => {
+router.get('/find', async (req, res) => {
     const user = req.user;
     if (!user) {
         return res.status(404).json({ msg: "You are not authorized to access this resource" });
     }
-    User.findOne({ _id: user._id }).then((user) => {
-        res.status(200).json({ msg: user });
-    }).catch((error) => {
-        res.status(500).json({ msg: error });
-    })
+    let userRes = await User.findOne({ _id: user._id })
+    return res.status(200).json({ msg: userRes });
 })
 
 router.put('/:id', async (req, res) => {
@@ -33,8 +30,8 @@ router.put('/:id', async (req, res) => {
     if (avatar) userInfo.avatar = avatar
 
     User.findOneAndUpdate({ _id: userId }, userInfo, { new: true }).then((user) => {
-        Message.find({'from.userId': user._id}).then((messages) => {
-            if(messages) {
+        Message.find({ 'from.userId': user._id }).then((messages) => {
+            if (messages) {
                 messages.forEach(message => {
                     message.from.avatar = user.avatar
                     message.save()
