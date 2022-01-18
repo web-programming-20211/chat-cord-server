@@ -186,7 +186,7 @@ io.on('connection', (socket) => {
                     room.save()
                 })
                 Message.deleteOne({ _id: id }).then(result => {
-                    io.in(roomId).emit('dialog-deleted', id)
+                    io.emit('dialog-deleted', id)
                 })
             }
         })
@@ -208,7 +208,7 @@ io.on('connection', (socket) => {
                             React.find({ react_at: dialog._id }).then(result => {
                                 const edited_list = getReactionsByMessage(result)
                                 edited_list._id = dialog._id
-                                io.to(roomId).emit('return-reaction', edited_list)
+                                io.emit('return-reaction', edited_list)
                             })
                         })
                     } else {
@@ -216,7 +216,7 @@ io.on('connection', (socket) => {
                         react_info.save(err => {
                             React.find({ react_at: dialog._id }).then(result => {
                                 const edited_list = getReactionsByMessage(result)
-                                io.to(roomId).emit('return-reaction', edited_list)
+                                io.emit('return-reaction', edited_list)
                             })
                         })
                     }
@@ -234,7 +234,7 @@ io.on('connection', (socket) => {
                         if (err) handleError(err)
                         React.find({ react_at: dialog._id }).then(result => {
                             const edited_list = getReactionsByMessage(result)
-                            io.to(roomId).emit('return-reaction', edited_list)
+                            io.emit('return-reaction', edited_list)
                         })
                     })
                 }
