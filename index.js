@@ -94,12 +94,10 @@ io.on('connection', (socket) => {
     });
 
     socket.on('joinRoom', (currentRoom) => {
-        console.log("joinRoom", currentRoom)
         socket.join(currentRoom)
     })
 
     socket.on('leaveRoom', (currentRoom) => {
-        console.log("leaveRoom", currentRoom)
         socket.leave(currentRoom)
     })
 
@@ -166,7 +164,7 @@ io.on('connection', (socket) => {
                 }
                 room.save()
             }
-            io.emit('new-pinned-message', msg, roomId, room)
+            io.in(roomId).emit('new-pinned-message', msg, roomId, room)
         })
     })
 
