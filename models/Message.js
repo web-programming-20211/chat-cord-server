@@ -8,7 +8,8 @@ const messageSchema = new mongoose.Schema({
         username: String,
         userId: mongoose.Schema.Types.ObjectId,
         color: String,
-        avatar: String
+        avatar: String,
+        fullname: String,
     },
     pinned : {
         type: Boolean,

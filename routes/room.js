@@ -13,7 +13,7 @@ const router = express.Router()
 router.get('/retrieve', (req, res) => {
   const user = req.user;
   if (!user) {
-      return res.status(404).json({ msg: "You are not authorized to access this resource" });
+    return res.status(404).json({ msg: "You are not authorized to access this resource" });
   }
   const id = req.user._id
   Attend.find({ userId: id })
@@ -38,7 +38,7 @@ router.get('/retrieve', (req, res) => {
 router.get('/:id', (req, res) => {
   const user = req.user;
   if (!user) {
-      return res.status(404).json({ msg: "You are not authorized to access this resource" });
+    return res.status(404).json({ msg: "You are not authorized to access this resource" });
   }
   const id = req.params.id
   Room.findOne({ _id: id })
@@ -55,7 +55,7 @@ router.get('/:id', (req, res) => {
 router.post('/create', (req, res) => {
   const user = req.user;
   if (!user) {
-      return res.status(404).json({ msg: "You are not authorized to access this resource" });
+    return res.status(404).json({ msg: "You are not authorized to access this resource" });
   }
 
   const userId = req.user._id
@@ -93,7 +93,7 @@ router.post('/create', (req, res) => {
 router.put('/:id', (req, res) => {
   const user = req.user;
   if (!user) {
-      return res.status(404).json({ msg: "You are not authorized to access this resource" });
+    return res.status(404).json({ msg: "You are not authorized to access this resource" });
   }
   const id = req.params.id
   const { name, description, isPrivate, avatar } = req.body
@@ -114,7 +114,7 @@ router.put('/:id', (req, res) => {
 router.post('/:id/attend', (req, res) => {
   const user = req.user;
   if (!user) {
-      return res.status(404).json({ msg: "You are not authorized to access this resource" });
+    return res.status(404).json({ msg: "You are not authorized to access this resource" });
   }
 
   Room.findOne({ shortId: req.params.id })
@@ -145,7 +145,7 @@ router.post('/:id/attend', (req, res) => {
 router.post('/:id/addMember', (req, res) => {
   const user = req.user;
   if (!user) {
-      return res.status(404).json({ msg: "You are not authorized to access this resource" });
+    return res.status(404).json({ msg: "You are not authorized to access this resource" });
   }
   const adminId = user._id.toString();
   Room.findOne({ _id: req.params.id })
@@ -185,7 +185,7 @@ router.post('/:id/addMember', (req, res) => {
 router.post('/:id/leave', (req, res) => {
   const user = req.user;
   if (!user) {
-      return res.status(404).json({ msg: "You are not authorized to access this resource" });
+    return res.status(404).json({ msg: "You are not authorized to access this resource" });
   }
   const userId = req.user._id
   const roomId = req.params.id
@@ -201,9 +201,9 @@ router.post('/:id/leave', (req, res) => {
 router.get('/:id/members', (req, res) => {
   const user = req.user;
   if (!user) {
-      return res.status(404).json({ msg: "You are not authorized to access this resource" });
+    return res.status(404).json({ msg: "You are not authorized to access this resource" });
   }
-  
+
   const roomId = req.params.id
   Attend.find({ roomId: roomId }).then((rooms) => {
     const promises = []
@@ -219,6 +219,30 @@ router.get('/:id/members', (req, res) => {
   }).catch(() => {
     res.status(404).json({ msg: 'room not found' })
   })
+})
+
+// get user online of a room
+router.get('/:id/online', (req, res) => {
+  const user = req.user;
+  if (!user) {
+    return res.status(404).json({ msg: "You are not authorized to access this resource" });
+  }
+
+  const roomId = req.params.id
+  Attend.find({ roomId: roomId }).then((rooms) => {
+    const users = []
+    rooms.forEach((room) => {
+      User.findOne({ _id: room.userId, online: true }).then((user) => {
+        if (user) {
+          users.push(user)
+        }
+      })
+    })
+    res.status(200).json({ msg: users })
+  }).catch(() => {
+    res.status(404).json({ msg: 'room not found' })
+  })
+
 })
 
 module.exports = router

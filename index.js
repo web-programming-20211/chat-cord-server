@@ -19,6 +19,7 @@ const Room = require('./models/Room')
 const { createSocket } = require('dgram')
 const config = require('./config/config')
 const console = require('console')
+const Attend = require('./models/Attend')
 
 try {
     mongoose.connect(
@@ -74,23 +75,27 @@ const io = socket(server, {
     },
 });
 
-const onlineUsers = []
-
 io.on('connection', (socket) => {
     socket.emit('connected')
 
     socket.on('login', (userId) => {
-        if (!onlineUsers.includes(userId)) {
-            onlineUsers.push(userId)
-        }
-        io.emit('loggedIn', onlineUsers)
+        User.findOne({ _id: userId }).then(user => {
+            if (user) {
+                user.online = true
+                user.save()
+                io.emit('loggedIn', userId)
+            }
+        })
     });
 
     socket.on('logout', (userId) => {
-        if (onlineUsers.includes(userId)) {
-            onlineUsers.splice(onlineUsers.indexOf(userId), 1)
-        }
-        io.emit('loggedOut', onlineUsers)
+        User.findOne({ _id: userId }).then(user => {
+            if (user) {
+                user.online = false
+                user.save()
+                io.emit('loggedOut', userId)
+            }
+        })
     });
 
     socket.on('joinRoom', (currentRoom) => {
@@ -113,7 +118,8 @@ io.on('connection', (socket) => {
                         userId: user._id,
                         username: user.username,
                         color: user.color,
-                        avatar: user.avatar
+                        avatar: user.avatar,
+                        fullname: user.fullname,
                     }
                 }
                 const message_model = new Message(message_instance)
@@ -237,6 +243,12 @@ io.on('connection', (socket) => {
                     })
                 }
             })
+        })
+    })
+
+    socket.on('kick', (userId, roomId) => {
+        Attend.deleteOne({ roomId: roomId, userId: userId }).then(() => {
+            io.in(roomId).emit('kicked', userId, roomId)
         })
     })
 
