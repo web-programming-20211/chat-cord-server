@@ -4,6 +4,7 @@ const shortid = require('shortid')
 const User = require('../models/User')
 const Room = require('../models/Room')
 const Attend = require('../models/Attend')
+const Message = require('../models/Message')
 const mongoose = require('mongoose')
 const constants = require("../const/const")
 
@@ -243,6 +244,34 @@ router.get('/:id/online', (req, res) => {
     res.status(404).json({ msg: 'room not found' })
   })
 
+})
+
+router.get('/:id/messages/:mess', (req, res) => {
+  const user = req.user;
+  if (!user) {
+    return res.status(404).json({ msg: "You are not authorized to access this resource" });
+  }
+
+  const roomId = req.params.id
+  var query = req.params.mess
+  query = query.toLowerCase()
+  const result = []
+  Message.find({ in: roomId }).then((messages) => {
+    messages.forEach((message) => {
+      if (message.content.includes(query) || message.from.username.includes(query)) {
+        result.push({
+          messageId: message._id,
+          content: message.content,
+          username: message.from.username,
+          createdAt: message.createdAt,
+          urls: message.from.urls,
+          avatar: message.from.avatar,
+          color: message.from.color,
+        })
+      } 
+    })
+    return res.status(200).json({msg: result})
+  })
 })
 
 module.exports = router
