@@ -247,8 +247,12 @@ io.on('connection', (socket) => {
     })
 
     socket.on('kick', (userId, roomId) => {
-        Attend.deleteOne({ roomId: roomId, userId: userId }).then(() => {
-            io.in(roomId).emit('kicked', userId, roomId)
+        Attend.findOne({ user: userId, room: roomId }).then(attend => {
+            if (attend) {
+                Attend.deleteOne({ roomId: roomId, userId: userId }).then(() => {
+                    io.in(roomId).emit('kicked', userId, roomId)
+                })
+            }
         })
     })
 
