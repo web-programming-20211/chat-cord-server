@@ -34,6 +34,10 @@ const RoomSchema = new mongoose.Schema({
         default: '#000000'
     },
     pinnedMessages: [
+        {
+            messageId : mongoose.Schema.Types.ObjectId,
+            message: String,
+        }
     ],
     lastMessage: {
         type: String,

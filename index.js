@@ -157,12 +157,12 @@ io.on('connection', (socket) => {
                 if (!msg) {
                     room.pinnedMessages.push({
                         messageId: dialog._id,
-                        username: dialog.from.username,
-                        avatar: dialog.from.avatar,
                         message: dialog.content,
-                        createdAt: dialog.createdAt,
-                        urls: dialog.urls,
-                        color: dialog.from.color,
+                        // username: dialog.from.username,
+                        // avatar: dialog.from.avatar,
+                        // createdAt: dialog.createdAt,
+                        // urls: dialog.urls,
+                        // color: dialog.from.color,
                     })
                 }
                 else {
