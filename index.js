@@ -66,6 +66,7 @@ const upload = multer({
 
 const server = app.listen(port, () => console.log(`Running on port ${port}`))
 
+const map = {}
 
 const io = socket(server, {
     cors: {
@@ -78,9 +79,20 @@ const io = socket(server, {
 io.on('connection', (socket) => {
     socket.emit('connected')
 
+    socket.on('disconnect', function(){
+        User.findOne({ _id: map[socket.id] }).then(user => {
+            if (user) {
+                user.online = false
+                user.save()
+                io.emit('loggedOut', map[socket.id])
+            }
+        })
+    });
+
     socket.on('login', (userId) => {
         User.findOne({ _id: userId }).then(user => {
             if (user) {
+                map[socket.id] = userId
                 user.online = true
                 user.save()
                 io.emit('loggedIn', userId)
@@ -256,5 +268,4 @@ io.on('connection', (socket) => {
         })
     })
 
-    socket.on('disconnect', () => { })
 })
