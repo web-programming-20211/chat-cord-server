@@ -17,22 +17,23 @@ router.get('/retrieve', (req, res) => {
     return res.status(404).json({ msg: "You are not authorized to access this resource" });
   }
   const id = req.user._id
-  Attend.find({ userId: id })
-    .then((rooms) => {
-      const promises = []
-      rooms.forEach((room) => {
-        const subPromise = new Promise((resolve, reject) => {
-          Room.findOne({ _id: room.roomId }).then((result) => resolve(result))
+  try {
+    Attend.find({ userId: id })
+      .then((rooms) => {
+        const promises = []
+        rooms.forEach((room) => {
+          const subPromise = new Promise((resolve, reject) => {
+            Room.findOne({ _id: room.roomId }).then((result) => resolve(result))
+          })
+          promises.push(subPromise)
         })
-        promises.push(subPromise)
+        Promise.all(promises).then((result) => {
+          return res.status(200).json({ msg: result })
+        })
       })
-      Promise.all(promises).then((result) => {
-        res.status(200).json({ msg: result })
-      })
-    })
-    .catch((err) => {
-      res.status(500).json({ msg: err.message })
-    })
+  } catch (err) {
+    return res.status(500).json({ msg: err.message })
+  }
 })
 
 // get room by id 
@@ -42,13 +43,14 @@ router.get('/:id', (req, res) => {
     return res.status(404).json({ msg: "You are not authorized to access this resource" });
   }
   const id = req.params.id
-  Room.findOne({ _id: id })
-    .then((room) => {
-      res.status(200).json({ msg: room })
-    })
-    .catch((err) => {
-      res.status(404).json({ msg: 'Room not found' })
-    })
+  try {
+    Room.findOne({ _id: id })
+      .then((room) => {
+        return res.status(200).json({ msg: room })
+      })
+  } catch (err) {
+    return res.status(500).json({ msg: err.message })
+  }
 })
 
 
@@ -61,34 +63,37 @@ router.post('/create', (req, res) => {
 
   const userId = req.user._id
   const { name, description, isPrivate } = req.body
-
-  const newRoom = new Room({
-    shortId: shortid.generate(),
-    name: name,
-    description: description,
-    creator: userId,
-    isPrivate: isPrivate,
-    color: Math.floor(Math.random() * 16777215).toString(16),
-    lastMessageDate: new Date(),
-    lastMessage: '',
-    pinnedMessages: [],
-    avatar: constants.AVATAR,
-  })
-
-  newRoom
-    .save()
-    .then((result) => {
-      const newAttend = new Attend({
-        roomId: result._id,
-        userId: userId,
-      })
-      newAttend.save().then((result) => {
-        res.status(200).json({ msg: newRoom })
-      })
+  console.log(req.body.name)
+  if (name.length == 0 || description.length == 0) {
+    return res.status(400).json({ msg: "Please fill all the fields" })
+  }
+  try {
+    const newRoom = new Room({
+      shortId: shortid.generate(),
+      name: name,
+      description: description,
+      creator: userId,
+      isPrivate: isPrivate,
+      color: Math.floor(Math.random() * 16777215).toString(16),
+      lastMessageDate: new Date(),
+      lastMessage: '',
+      pinnedMessages: [],
+      avatar: constants.AVATAR,
     })
-    .catch((err) => {
-      res.status(500).json({ msg: err.message })
-    })
+    newRoom
+      .save()
+      .then((result) => {
+        const newAttend = new Attend({
+          roomId: result._id,
+          userId: userId,
+        })
+        newAttend.save().then((result) => {
+          return res.status(200).json({ msg: newRoom })
+        })
+      })
+  } catch (err) {
+    return res.status(500).json({ msg: err.message })
+  }
 })
 
 //update a room
@@ -99,17 +104,29 @@ router.put('/:id', (req, res) => {
   }
   const id = req.params.id
   const { name, description, isPrivate, avatar } = req.body
+
+
   var room = {}
   if (name) room.name = name
   if (description) room.description = description
   if (avatar) room.avatar = avatar
   room.isPrivate = isPrivate
-  Room.findOneAndUpdate({ _id: id }, room, { new: true }).then((room) => {
-    res.status(200).json({ msg: "Update successfully" });
+
+  try {
+    Room.findOne({ _id: id }).then(result => {
+      if (result) {
+        if (result.isPrivate && !result.creator.equals(user._id)) {
+          return res.status(403).json({ msg : "Please contact the room creator to update the room" })
+        }
+        Room.findOneAndUpdate({ _id: id }, room, { new: true }).then((room) => {
+          return res.status(200).json({ msg: "Update successfully" });
+        })
+      }
+    })
+  } catch (err) {
+    return res.status(500).json({ msg: err.message })
   }
-  ).catch((error) => {
-    res.status(500).json({ msg: error });
-  })
+
 })
 
 //attend a public room
@@ -118,29 +135,29 @@ router.post('/:id/attend', (req, res) => {
   if (!user) {
     return res.status(404).json({ msg: "You are not authorized to access this resource" });
   }
-
-  Room.findOne({ shortId: req.params.id })
-    .then((room) => {
-      if (room.isPrivate === true) {
-        return res.status(400).json({ msg: 'this room is private' })
-      }
-      Attend.findOne({ roomId: room._id, userId: req.user._id }).then(
-        (attend) => {
-          if (attend)
-            return res.status(400).json({ msg: room })
-          const newAttend = new Attend({
-            userId: user._id,
-            roomId: room._id,
-          })
-          newAttend.save().then((result) => {
-            return res.status(200).json({ msg: room })
-          })
+  try {
+    Room.findOne({ shortId: req.params.id })
+      .then((room) => {
+        if (room.isPrivate === true) {
+          return res.status(400).json({ msg: 'this room is private' })
         }
-      )
-    })
-    .catch(() => {
-      return res.status(404).json({ msg: 'room not found' })
-    })
+        Attend.findOne({ roomId: room._id, userId: req.user._id }).then(
+          (attend) => {
+            if (attend)
+              return res.status(400).json({ msg: room })
+            const newAttend = new Attend({
+              userId: user._id,
+              roomId: room._id,
+            })
+            newAttend.save().then((result) => {
+              return res.status(200).json({ msg: room })
+            })
+          }
+        )
+      })
+  } catch (err) {
+    return res.status(500).json({ msg: err.message })
+  }
 })
 
 //only admin can add user to a private/public room by gmail
@@ -150,37 +167,43 @@ router.post('/:id/addMember', (req, res) => {
     return res.status(404).json({ msg: "You are not authorized to access this resource" });
   }
   const adminId = user._id.toString();
-  Room.findOne({ _id: req.params.id })
-    .then((room) => {
-      req.body.emails.split(',').forEach((email) => {
-        User.findOne({ email: email }).then((user) => {
-          if (adminId !== room.creator.toString()) {
-            return res.status(400).json({ msg: 'only admin can add member' })
-          }
-          else {
-            Attend.findOne({ roomId: room._id, userId: user._id }).then(
-              (attend) => {
-                if (attend)
-                  return res.status(400).json({ msg: `user with mail ${email} already in room` })
-                else {
-                  const newAttend = new Attend({
-                    userId: user._id,
-                    roomId: room._id,
-                  })
-                  newAttend.save().then((result) => {
-                    return res.status(200).json({ msg: 'add successfully' })
-                  })
+  try {
+    Room.findOne({ _id: req.params.id })
+      .then((room) => {
+        req.body.emails.split(',').forEach((email) => {
+          User.findOne({ email: email }).then((user) => {
+            if (!user.active) {
+              return res.status(403).json({ msg: `user with mail ${email} is not active` })
+            }
+
+            if (room.isPrivate && !room.creator.equals(user._id)) {
+              return res.status(403).json({msg: "Please contact the room creator to add member"})
+            }
+            else {
+              Attend.findOne({ roomId: room._id, userId: user._id }).then(
+                (attend) => {
+                  if (attend)
+                    return res.status(400).json({ msg: `user with mail ${email} already in room` })
+                  else {
+                    const newAttend = new Attend({
+                      userId: user._id,
+                      roomId: room._id,
+                    })
+                    newAttend.save().then((result) => {
+                      return res.status(200).json({ msg: 'add successfully' })
+                    })
+                  }
                 }
-              }
-            )
-          }
-        }).catch((error) => {
-          return res.status(404).json({ msg: `user with mail ${email} not found` });
+              )
+            }
+          }).catch((error) => {
+            return res.status(404).json({ msg: `user with mail ${email} not found` });
+          })
         })
       })
-    }).catch(() => {
-      return res.status(404).json({ msg: 'room not found' })
-    })
+  } catch (err) {
+    return res.status(500).json({ msg: err.message })
+  }
 })
 
 //leave the room
@@ -191,12 +214,13 @@ router.post('/:id/leave', (req, res) => {
   }
   const userId = req.user._id
   const roomId = req.params.id
-  Attend.deleteOne({ roomId: roomId, userId: userId }).then(() => {
-    res.status(200).json({ msg: 'success' })
-  }).catch(() => {
-    res.status(404).json({ msg: 'room not found' })
-  })
-
+  try {
+    Attend.deleteOne({ roomId: roomId, userId: userId }).then(() => {
+      return res.status(200).json({ msg: 'success' })
+    })
+  } catch (err) {
+    return res.status(500).json({ msg: err.message })
+  }
 })
 
 // get members of a room
@@ -207,44 +231,23 @@ router.get('/:id/members', (req, res) => {
   }
 
   const roomId = req.params.id
-  Attend.find({ roomId: roomId }).then((rooms) => {
-    const promises = []
-    rooms.forEach((room) => {
-      const subPromise = new Promise((resolve, reject) => {
-        User.findOne({ _id: room.userId }).then((result) => resolve(result))
-      })
-      promises.push(subPromise)
-    })
-    Promise.all(promises).then((result) => {
-      res.status(200).json({ msg: result })
-    })
-  }).catch(() => {
-    res.status(404).json({ msg: 'room not found' })
-  })
-})
 
-// get user online of a room
-router.get('/:id/online', (req, res) => {
-  const user = req.user;
-  if (!user) {
-    return res.status(404).json({ msg: "You are not authorized to access this resource" });
+  try {
+    Attend.find({ roomId: roomId }).then((rooms) => {
+      const promises = []
+      rooms.forEach((room) => {
+        const subPromise = new Promise((resolve, reject) => {
+          User.findOne({ _id: room.userId }).then((result) => resolve(result))
+        })
+        promises.push(subPromise)
+      })
+      Promise.all(promises).then((result) => {
+        return res.status(200).json({ msg: result })
+      })
+    })
+  } catch (err) {
+    return res.status(500).json({ msg: err.message })
   }
-
-  const roomId = req.params.id
-  Attend.find({ roomId: roomId }).then((rooms) => {
-    const users = []
-    rooms.forEach((room) => {
-      User.findOne({ _id: room.userId, online: true }).then((user) => {
-        if (user) {
-          users.push(user)
-        }
-      })
-    })
-    res.status(200).json({ msg: users })
-  }).catch(() => {
-    res.status(404).json({ msg: 'room not found' })
-  })
-
 })
 
 router.get('/:id/messages/:mess', (req, res) => {
@@ -257,22 +260,27 @@ router.get('/:id/messages/:mess', (req, res) => {
   var query = req.params.mess
   query = query.toLowerCase()
   const result = []
-  Message.find({ in: roomId }).then((messages) => {
-    messages.forEach((message) => {
-      if (message.content.includes(query) || message.from.username.includes(query)) {
-        result.push({
-          messageId: message._id,
-          content: message.content,
-          username: message.from.username,
-          createdAt: message.createdAt,
-          urls: message.from.urls,
-          avatar: message.from.avatar,
-          color: message.from.color,
-        })
-      } 
+
+  try {
+    Message.find({ in: roomId }).then((messages) => {
+      messages.forEach((message) => {
+        if (message.content.includes(query) || message.from.username.includes(query)) {
+          result.push({
+            messageId: message._id,
+            content: message.content,
+            username: message.from.username,
+            createdAt: message.createdAt,
+            urls: message.from.urls,
+            avatar: message.from.avatar,
+            color: message.from.color,
+          })
+        }
+      })
+      return res.status(200).json({ msg: result })
     })
-    return res.status(200).json({msg: result})
-  })
+  } catch (err) {
+    return res.status(500).json({ msg: err.message })
+  }
 })
 
 module.exports = router

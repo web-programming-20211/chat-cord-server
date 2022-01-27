@@ -77,14 +77,11 @@ router.post("/register", async (req, res) => {
       newUser.password = hashedPassword
       newUser.save()
     }
-    res.status(200).json({
+    return res.status(200).json({
       msg: "Your account has been successfully created! We'll send a verify code to the email address you used to create the account.",
     })
   } catch (err) {
-    console.error(err.message)
-    res.status(500).json({
-      msg: "Server error",
-    })
+    return res.status(500).json({ msg: err.message })
   }
 })
 
@@ -115,10 +112,7 @@ router.post("/verify", async (req, res) => {
       })
     }
   } catch (err) {
-    console.error(err.message)
-    res.status(500).json({
-      msg: "Server error",
-    })
+    return res.status(500).json({ msg: err.message })
   }
 })
 
