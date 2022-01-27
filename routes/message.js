@@ -11,7 +11,7 @@ router.get('/room/:id', (req, res) => {
   const id = req.params.id
   if (mongoose.Types.ObjectId.isValid(id)) {
     Message.find({ in: id }).then(result => {
-      res.status(200).json({ msg: result })
+      return res.status(200).json({ msg: result })
     })
   }
 })

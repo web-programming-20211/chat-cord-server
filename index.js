@@ -138,7 +138,7 @@ io.on('connection', (socket) => {
                 message_model.save().then(result => {
                     Room.findOne({ _id: currentRoom }).then(room => {
                         if (room) {
-                            if (message.length === 0) {
+                            if (message.length == 0) {
                                 room.lastMessage = user.fullname + ' just sent a file'
                             } else {
                                 room.lastMessage = message
@@ -147,7 +147,7 @@ io.on('connection', (socket) => {
                             room.save()
                         }
                     })
-                    io.in(currentRoom).emit('new_message', result, currentRoom)
+                    io.emit('new_message', result, currentRoom)
                 })
             }
         })
@@ -165,16 +165,11 @@ io.on('connection', (socket) => {
 
         await Room.findOne({ _id: roomId }).then(room => {
             if (room) {
-                let msg = room.pinnedMessages.find(message => message.messageId === dialog._id)
+                let msg = room.pinnedMessages.find(message => message.messageId == dialog._id)
                 if (!msg) {
                     room.pinnedMessages.push({
                         messageId: dialog._id,
                         message: dialog.content,
-                        // username: dialog.from.username,
-                        // avatar: dialog.from.avatar,
-                        // createdAt: dialog.createdAt,
-                        // urls: dialog.urls,
-                        // color: dialog.from.color,
                     })
                 }
                 else {
@@ -182,7 +177,7 @@ io.on('connection', (socket) => {
                 }
                 room.save()
             }
-            io.in(roomId).emit('new-pinned-message', msg, roomId, room)
+            io.in(roomId).emit('new-pinned-message', roomId, room)
         })
     })
 
@@ -195,11 +190,13 @@ io.on('connection', (socket) => {
                     if (room) {
                         room.lastMessage = 'A message was deleted'
                     }
-                    let msg = room.pinnedMessages.find(message => message.messageId === id)
+                    let msg = room.pinnedMessages.find(message => message.messageId == id)
                     if (msg) {
                         room.pinnedMessages.splice(room.pinnedMessages.indexOf(msg), 1)
                     }
                     room.save()
+                    io.in(roomId).emit('new-pinned-message', roomId, room)
+
                 })
                 Message.deleteOne({ _id: id }).then(result => {
                     io.emit('dialog-deleted', id)
