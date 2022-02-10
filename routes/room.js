@@ -5,12 +5,10 @@ const User = require('../models/User')
 const Room = require('../models/Room')
 const Attend = require('../models/Attend')
 const Message = require('../models/Message')
-const mongoose = require('mongoose')
 const constants = require("../const/const")
 
 const router = express.Router()
 
-//get full list of rooms that user has attended
 router.get('/retrieve', (req, res) => {
   const user = req.user;
   if (!user) {
@@ -36,7 +34,6 @@ router.get('/retrieve', (req, res) => {
   }
 })
 
-// get room by id 
 router.get('/:id', (req, res) => {
   const user = req.user;
   if (!user) {
@@ -54,7 +51,6 @@ router.get('/:id', (req, res) => {
 })
 
 
-//create a room
 router.post('/create', (req, res) => {
   const user = req.user;
   if (!user) {
@@ -63,7 +59,6 @@ router.post('/create', (req, res) => {
 
   const userId = req.user._id
   const { name, description, isPrivate } = req.body
-  console.log(req.body.name)
   if (name.length == 0 || description.length == 0) {
     return res.status(400).json({ msg: "Please fill all the fields" })
   }
@@ -96,7 +91,6 @@ router.post('/create', (req, res) => {
   }
 })
 
-//update a room
 router.put('/:id', (req, res) => {
   const user = req.user;
   if (!user) {
@@ -129,7 +123,6 @@ router.put('/:id', (req, res) => {
 
 })
 
-//attend a public room
 router.post('/:id/attend', (req, res) => {
   const user = req.user;
   if (!user) {
@@ -139,12 +132,12 @@ router.post('/:id/attend', (req, res) => {
     Room.findOne({ shortId: req.params.id })
       .then((room) => {
         if (room.isPrivate === true) {
-          return res.status(400).json({ msg: 'this room is private' })
+          return res.status(403).json({ msg: 'This room is private' })
         }
         Attend.findOne({ roomId: room._id, userId: req.user._id }).then(
           (attend) => {
             if (attend)
-              return res.status(400).json({ msg: room })
+              return res.status(200).json({ msg: room })
             const newAttend = new Attend({
               userId: user._id,
               roomId: room._id,
@@ -160,7 +153,6 @@ router.post('/:id/attend', (req, res) => {
   }
 })
 
-//only admin can add user to a private/public room by gmail
 router.post('/:id/addMember', (req, res) => {
   const user = req.user;
   if (!user) {
@@ -171,33 +163,32 @@ router.post('/:id/addMember', (req, res) => {
     Room.findOne({ _id: req.params.id })
       .then((room) => {
         req.body.emails.split(',').forEach((email) => {
-          User.findOne({ email: email }).then((user) => {
-            if (!user.active) {
-              return res.status(403).json({ msg: `user with mail ${email} is not active` })
+          User.findOne({ email: email }).then((u) => {
+            if (!u.active) {
+              return res.status(403).json({ msg: `User with mail ${email} is not active` })
             }
-
             if (room.isPrivate && !room.creator.equals(user._id)) {
               return res.status(403).json({msg: "Please contact the room creator to add member"})
             }
             else {
-              Attend.findOne({ roomId: room._id, userId: user._id }).then(
+              Attend.findOne({ roomId: room._id, userId: u._id }).then(
                 (attend) => {
                   if (attend)
-                    return res.status(400).json({ msg: `user with mail ${email} already in room` })
+                    return res.status(400).json({ msg: `User with mail ${email} already in room` })
                   else {
                     const newAttend = new Attend({
-                      userId: user._id,
+                      userId: u._id,
                       roomId: room._id,
                     })
                     newAttend.save().then((result) => {
-                      return res.status(200).json({ msg: 'add successfully' })
+                      return res.status(200).json({ msg: 'Add successfully' })
                     })
                   }
                 }
               )
             }
           }).catch((error) => {
-            return res.status(404).json({ msg: `user with mail ${email} not found` });
+            return res.status(404).json({ msg: `User with mail ${email} not found` });
           })
         })
       })
@@ -206,7 +197,6 @@ router.post('/:id/addMember', (req, res) => {
   }
 })
 
-//leave the room
 router.post('/:id/leave', (req, res) => {
   const user = req.user;
   if (!user) {
@@ -223,7 +213,6 @@ router.post('/:id/leave', (req, res) => {
   }
 })
 
-// get members of a room
 router.get('/:id/members', (req, res) => {
   const user = req.user;
   if (!user) {

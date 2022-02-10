@@ -118,7 +118,6 @@ io.on('connection', (socket) => {
         socket.leave(currentRoom)
     })
 
-    //message sending event has been fired from a socket
     socket.on('chat', (message, urls, userId, currentRoom) => {
         User.findOne({ _id: userId }).then(user => {
             if (user) {
@@ -182,7 +181,6 @@ io.on('connection', (socket) => {
     })
 
 
-    //delete a message
     socket.on('delete', (id, roomId) => {
         Message.findOne({ _id: id }).then(message => {
             if (message) {
@@ -205,9 +203,7 @@ io.on('connection', (socket) => {
         })
     })
 
-    //reaction event has been fired
     socket.on('get-reaction', (dialog, reactionType, user_id, roomId) => {
-        //get userinfo
         User.findOne({ _id: user_id }).then(user => {
             React.findOne({
                 react_at: dialog._id, from: {

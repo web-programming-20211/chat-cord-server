@@ -1,4 +1,3 @@
-// get environment variables
 require('dotenv').config()
 
 const config = {}
